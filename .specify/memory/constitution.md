@@ -1,6 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
+- Version change: 1.1.0 → 1.1.1 (PATCH: documentos referem os casos de avaliação como AV-Txxx; data/ intocado)
+- Histórico: 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
   (1.0.0 foi a versão inicial, a partir do template não preenchido)
 - Princípios adicionados: I. Rastreabilidade; II. Consultas parametrizadas, nunca SQL do modelo;
   III. Docker Compose como único meio de execução; IV. Simplicidade; V. Testes (pytest com LLM mockada + script de avaliação com LLM real);
@@ -48,7 +49,7 @@ Os testes são de duas naturezas distintas e MUST NOT ser misturados:
   de erros e logging. Resultados financeiros MUST ser conferidos por cálculo independente sobre os CSV.
   Rodam em todo gate de fase.
 - **Script de avaliação (LLM real):** um script separado, fora do `pytest`, MUST executar os casos
-  T001–T012 de `data/testes/perguntas_avaliacao.json` contra o sistema com LLM real e gerar um log de
+  AV-T001–AV-T012 de `data/testes/perguntas_avaliacao.json` contra o sistema com LLM real e gerar um log de
   execução (por caso: `trace_id`, domínio esperado vs. obtido, fonte esperada vs. obtida, critério,
   resultado, latência). O log MUST ser versionado como evidência, sem segredos. Requer chave de API e
   por isso não roda no gate automático.
@@ -84,7 +85,9 @@ sem aprovação explícita do usuário, mesmo que a fase seguinte esteja planeja
 
 - Backend: Python + FastAPI. Frontend: HTML, CSS e JavaScript simples. Dados tabulares em PostgreSQL
   (reaproveitar `data/sql/schema.sql`); documentos internos via RAG com citação do arquivo-fonte.
-- Arquivos em `data/` são as bases fornecidas e MUST NOT ser alterados; CSVs são lidos com
+- Arquivos em `data/` são as bases fornecidas e MUST NOT ser alterados. Nos documentos do projeto, os casos de
+  avaliação são referidos com prefixo `AV-` (`AV-T001`–`AV-T012`, correspondentes a `T001`–`T012` em
+  `perguntas_avaliacao.json`), para não colidir com os IDs de tarefas do `tasks.md`; CSVs são lidos com
   `utf-8-sig`.
 - Dados são sintéticos; a aplicação MUST NOT sugerir que representem registros reais.
 - Fora de escopo: autenticação, multiusuário, escrita nas bases, frameworks de frontend.
@@ -110,4 +113,4 @@ MAJOR para remoção ou redefinição incompatível de princípios; MINOR para n
 material; PATCH para esclarecimentos. A conformidade é verificada no gate de cada fase e na etapa de
 plano (Constitution Check). Orientação de uso diário: `CLAUDE.md` e `docs/DEVLOG.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
+**Version**: 1.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
