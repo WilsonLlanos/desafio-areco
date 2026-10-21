@@ -35,6 +35,7 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 ## 6. Consultas parametrizadas (financeiro e ouvidoria)
 - **Catálogo fixo** com parâmetros tipados (Pydantic): período (`ano`, `mes`, intervalo), `tipo_data` (`competencia`|`vencimento`, padrão competência), `criterio_gasto` (`paga`|`incorrida`, padrão **incorrida**), `status`, `departamento`, `centro_custo` (CC100–CC600), `categoria`, `prioridade`, `canal`, `protocolo` (`^OUV-\d{4}$`, normalizado para maiúsculas).
 - Financeiro: `soma_despesas`, `soma_receitas`, `comparar_periodos`, `orcamento_por_departamento` (maior/menor), `execucao_orcamentaria`, `inadimplencia`. Ouvidoria: `buscar_protocolo`, `listar/contar` com filtros, `referencia` (enums de `referencia_ouvidoria.json`).
+- **Período ausente** em pergunta financeira → esclarecimento (FR-035). **`receita_liquida`**: soma das receitas, declarando que não há deduções registradas (FR-036). **Listas** (ouvidoria): até 10 itens mais o total (FR-010).
 - SQL com `%s`/`NUMERIC`, nomes de coluna vindos de whitelist no código. Resposta renderizada por **template em código** com critério declarado; o LLM não vê nem escreve números.
 - Parâmetro ausente que muda o resultado (ex.: período) → esclarecimento; "gasto" sem critério → incorrida, declarado (FR-017).
 - Ano fora de 2025–2026 ou sem lançamentos → resposta explícita "sem dados no período".

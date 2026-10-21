@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aurora — Assistente</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Assistente Aurora</h1>
+    <p class="sub">Pergunte sobre financeiro, informações internas ou ouvidoria. Dados sintéticos para demonstração.</p>
+    <div id="aviso" class="aviso" hidden>Modo degradado: roteamento por regras, sem LLM.</div>
+    <form id="form">
+      <textarea id="pergunta" rows="3" maxlength="1000" placeholder="Ex.: Qual o status do protocolo OUV-0002?" required></textarea>
+      <button id="enviar" type="submit">Perguntar</button>
+    </form>
+    <div id="estado" class="estado" hidden></div>
+    <section id="resultado" hidden>
+      <p id="resposta" class="resposta"></p>
+      <dl class="meta">
+        <dt>Domínio</dt><dd id="dominio"></dd>
+        <dt>Agente</dt><dd id="agente"></dd>
+        <dt>Confiança</dt><dd id="confianca"></dd>
+        <dt>Fontes</dt><dd><ul id="fontes"></ul></dd>
+        <dt>Trace ID</dt><dd><code id="trace"></code></dd>
+      </dl>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

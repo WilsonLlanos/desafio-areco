@@ -32,42 +32,42 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 - [X] T001 `CLAUDE.md` na raiz com a regra de registro contínuo no DEVLOG e de guarda das conversas em `docs/conversas/` — **já criado antes da Fase 1** (pré-fase); na Fase 1, apenas revisar o arquivo e atualizá-lo se o fluxo mudar
 - [X] T002 [P] `docs/DEVLOG.md` com formato de nota/resumo e o histórico retroativo da pré-fase (inclui a emenda 1.2.0) — **já criado antes da Fase 1**; na Fase 1, apenas acrescentar as notas das tarefas e o resumo da fase
-- [ ] T003 [P] Criar `.gitignore` (inclui `.env`, `logs/`, `__pycache__/`, `.pytest_cache/`) e `.env.example` sem valores reais (`GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.1-flash-lite`, `CONFIDENCE_THRESHOLD=0.6`, `POSTGRES_*`, `DB_RO_PASSWORD`, `LOG_DIR`)
-- [ ] T004 [P] Criar `requirements.txt` (fastapi, uvicorn, pydantic, psycopg[binary], rank-bm25, langgraph, google-genai, pytest, httpx) com versões fixadas
-- [ ] T005 Criar `Dockerfile` (Python 3.12, usuário não-root) e `docker-compose.yml` (`db` PostgreSQL 16 com healthcheck; `app` depende de `db`; `data/` montado somente leitura; volume `logs/`)
-- [ ] T006 Criar estrutura de pacotes `app/`, `app/api/`, `app/llm/`, `app/agents/`, `app/rag/`, `app/queries/`, `tests/`, `frontend/`, `scripts/` com `__init__.py`
+- [X] T003 [P] Criar `.gitignore` (inclui `.env`, `logs/`, `__pycache__/`, `.pytest_cache/`) e `.env.example` sem valores reais (`GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.1-flash-lite`, `CONFIDENCE_THRESHOLD=0.6`, `POSTGRES_*`, `DB_RO_PASSWORD`, `LOG_DIR`)
+- [X] T004 [P] Criar `requirements.txt` (fastapi, uvicorn, pydantic, psycopg[binary], rank-bm25, langgraph, google-genai, pytest, httpx) com versões fixadas
+- [X] T005 Criar `Dockerfile` (Python 3.12, usuário não-root) e `docker-compose.yml` (`db` PostgreSQL 16 com healthcheck; `app` depende de `db`; `data/` montado somente leitura; volume `logs/`)
+- [X] T006 Criar estrutura de pacotes `app/`, `app/api/`, `app/llm/`, `app/agents/`, `app/rag/`, `app/queries/`, `tests/`, `frontend/`, `scripts/` com `__init__.py`
 
 ### Base (bloqueia as histórias)
 
-- [ ] T007 `app/config.py`: leitura de variáveis de ambiente com padrões e validação
-- [ ] T008 `app/db.py`: conexão psycopg com papel `aurora_ro` e helper de consulta parametrizada; tratamento de banco indisponível
-- [ ] T009 `app/ingestion.py`: aplica `data/sql/schema.sql`, lê os 3 CSV (`utf-8-sig`), valida datas e enums contra `referencia_ouvidoria.json`, converte `valor_brl` para `Decimal`, faz upsert por chave primária, cria o papel `aurora_ro` com `SELECT` apenas; aborta com arquivo/linha em dado inválido
-- [ ] T010 [P] `tests/test_ingestion.py`: contagens (300/144/180), idempotência (duas execuções), rejeição de enum inválido, `Decimal` preservado, papel `ro` sem permissão de escrita
-- [ ] T011 `app/tracing.py`: `trace_id` UUID4 em `contextvar`, logger JSON, gravação em `logs/interactions.jsonl` com os campos de `data-model.md`, sem segredos
-- [ ] T012 `app/api/schemas.py`: `AskRequest`, `AskResponse`, `Fonte`, `Classificacao`, `Erro` conforme `contracts/api.openapi.yaml`
-- [ ] T013 `app/llm/base.py`: protocolo `LLMClient` (`classify`, `extract_params`, `answer`) e `FakeLLM` injetável para testes
-- [ ] T014 `app/llm/rules.py`: `RulesLLM` com classificação por regex/palavras-chave (protocolo `OUV-\d{4}`, termos financeiros, de ouvidoria e de políticas) e extração de parâmetros de ouvidoria
-- [ ] T015 `app/guards.py`: validação de entrada (vazia, só símbolos, > 1000 caracteres → 422)
+- [X] T007 `app/config.py`: leitura de variáveis de ambiente com padrões e validação
+- [X] T008 `app/db.py`: conexão psycopg com papel `aurora_ro` e helper de consulta parametrizada; tratamento de banco indisponível
+- [X] T009 `app/ingestion.py`: aplica `data/sql/schema.sql`, lê os 3 CSV (`utf-8-sig`), valida datas e enums contra `referencia_ouvidoria.json`, converte `valor_brl` para `Decimal`, faz upsert por chave primária, cria o papel `aurora_ro` com `SELECT` apenas; aborta com arquivo/linha em dado inválido
+- [X] T010 [P] `tests/test_ingestion.py`: contagens (300/144/180), idempotência (duas execuções), rejeição de enum inválido, `Decimal` preservado, papel `ro` sem permissão de escrita
+- [X] T011 `app/tracing.py`: `trace_id` UUID4 em `contextvar`, logger JSON, gravação em `logs/interactions.jsonl` com os campos de `data-model.md`, sem segredos
+- [X] T012 `app/api/schemas.py`: `AskRequest`, `AskResponse`, `Fonte`, `Classificacao`, `Erro` conforme `contracts/api.openapi.yaml`
+- [X] T013 `app/llm/base.py`: protocolo `LLMClient` (`classify`, `extract_params`, `answer`) e `FakeLLM` injetável para testes
+- [X] T014 `app/llm/rules.py`: `RulesLLM` com classificação por regex/palavras-chave (protocolo `OUV-\d{4}`, termos financeiros, de ouvidoria e de políticas) e extração de parâmetros de ouvidoria
+- [X] T015 `app/guards.py`: validação de entrada (vazia, só símbolos, > 1000 caracteres → 422)
 
 ### US3 — Execução reproduzível
 
-- [ ] T016 [US3] Ponto de entrada do `app`: executa `python -m app.ingestion` e depois sobe Uvicorn; `GET /health` em `app/main.py` (banco, modo `llm`/`degradado`)
-- [ ] T017 [US3] Rascunho inicial do `README.md` com o passo a passo de subida (clone, `.env`, `docker compose up`) e o primeiro teste de pergunta
+- [X] T016 [US3] Ponto de entrada do `app`: executa `python -m app.ingestion` e depois sobe Uvicorn; `GET /health` em `app/main.py` (banco, modo `llm`/`degradado`)
+- [X] T017 [US3] Rascunho inicial do `README.md` com o passo a passo de subida (clone, `.env`, `docker compose up`) e o primeiro teste de pergunta
 
 ### US1/US4 — Pergunta, ouvidoria por protocolo e rastreio
 
-- [ ] T018 [P] [US1] `app/queries/ouvidoria.py`: `buscar_protocolo` parametrizada (regex `^OUV-\d{4}$`, maiúsculas), enums da base de referência
-- [ ] T019 [US1] `app/agents/ouvidoria.py`: busca exata, resposta por template em código com status, datas de abertura/resposta e fonte `{protocolo}`; sem correspondência → `status=nao_encontrado` (FR-009, FR-013)
-- [ ] T020 [US1] `app/orchestrator.py` (versão mínima em LangGraph): nós `guard → classify → agente_ouvidoria / esclarecer / fora_de_escopo → finalizar`, estado tipado com `trace_id`; domínios ainda não implementados devolvem aviso claro
-- [ ] T021 [US4] `app/main.py`: middleware de `trace_id` (cabeçalho `X-Trace-Id`), `POST /ask`, `GET /traces/{trace_id}`, tratamento de erro sem derrubar a API (502 em falha de dependência)
-- [ ] T022 [P] [US1] `frontend/index.html`, `frontend/style.css`, `frontend/app.js`: campo de pergunta, carregando, erro, resposta, domínio/agente/confiança, fontes, `trace_id` e aviso de modo degradado (FR-024); servido por `StaticFiles`
-- [ ] T023 [P] [US4] `tests/test_tracing.py`: um registro por requisição com todos os campos; falha registra o erro com o mesmo `trace_id`; resposta e cabeçalho expõem o id
-- [ ] T024 [P] [US1] `tests/test_ouvidoria_protocolo.py`: AV-T009 (OUV-0002 → "Aguardando área responsável"), AV-T004 (OUV-9999 → não encontrado), `OUV-12` e minúsculas
-- [ ] T025 [P] [US1] `tests/test_api.py`: 422 para entrada vazia/longa, `/health`, banco indisponível → erro claro e API ativa
+- [X] T018 [P] [US1] `app/queries/ouvidoria.py`: `buscar_protocolo` parametrizada (regex `^OUV-\d{4}$`, maiúsculas), enums da base de referência
+- [X] T019 [US1] `app/agents/ouvidoria.py`: busca exata, resposta por template em código com status, datas de abertura/resposta e fonte `{protocolo}`; sem correspondência → `status=nao_encontrado` (FR-009, FR-013)
+- [X] T020 [US1] `app/orchestrator.py` (versão mínima em LangGraph): nós `guard → classify → agente_ouvidoria / esclarecer / fora_de_escopo → finalizar`, estado tipado com `trace_id`; domínios ainda não implementados devolvem aviso claro
+- [X] T021 [US4] `app/main.py`: middleware de `trace_id` (cabeçalho `X-Trace-Id`), `POST /ask`, `GET /traces/{trace_id}`, tratamento de erro sem derrubar a API (502 em falha de dependência)
+- [X] T022 [P] [US1] `frontend/index.html`, `frontend/style.css`, `frontend/app.js`: campo de pergunta, carregando, erro, resposta, domínio/agente/confiança, fontes, `trace_id` e aviso de modo degradado (FR-024); servido por `StaticFiles`
+- [X] T023 [P] [US4] `tests/test_tracing.py`: um registro por requisição com todos os campos; falha registra o erro com o mesmo `trace_id`; resposta e cabeçalho expõem o id
+- [X] T024 [P] [US1] `tests/test_ouvidoria_protocolo.py`: AV-T009 (OUV-0002 → "Aguardando área responsável"), AV-T004 (OUV-9999 → não encontrado), `OUV-12` e minúsculas
+- [X] T025 [P] [US1] `tests/test_api.py`: 422 para entrada vazia/longa, `/health`, banco indisponível → erro claro e API ativa
 
 ### Gate
 
-- [ ] T026 Gate da Fase 1: rodar `quickstart.md` (cenários 1–4 e 6), `pytest` verde, resumo da Fase 1 no DEVLOG, checar ausência de segredos, **commit da fase** e **aguardar aprovação**
+- [X] T026 Gate da Fase 1: rodar `quickstart.md` (cenários 1–4 e 6), `pytest` verde, resumo da Fase 1 no DEVLOG, checar ausência de segredos, **commit da fase** e **aguardar aprovação**
 
 ---
 
@@ -78,14 +78,14 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 **Teste independente**: perguntas financeiras e de ouvidoria por filtro retornam valores iguais ao cálculo independente sobre os CSV.
 
 - [ ] T027 [P] [US1] `app/queries/ouvidoria.py`: `contar` e `listar` com filtros (status, categoria, prioridade, canal, intervalo de `data_abertura`) e `referencia` (enums de `referencia_ouvidoria.json`)
-- [ ] T028 [US1] `app/agents/ouvidoria.py`: consultas por filtro, contagens/listas (limite de itens exibidos + total), distinção abertura × resposta e "Respondido" × "Concluído", prazo de 10 dias como parâmetro demonstrativo (FR-010 a FR-012)
-- [ ] T029 [P] [US1] `app/queries/financeiro.py`: `soma_despesas`, `soma_receitas`, `comparar_periodos`, `orcamento_por_departamento`, `execucao_orcamentaria`, `inadimplencia`; colunas por whitelist, `NUMERIC`, `tipo_data` (padrão competência) e `criterio_gasto` (padrão **incorrida**)
-- [ ] T030 [US1] `app/agents/financeiro.py`: valida `ParamsFinanceiro`, executa a consulta, renderiza resposta por template em reais com o critério declarado (tipo, status, tipo de data, período, centro de custo/departamento) e fontes (consulta + arquivo + até 10 IDs `FIN-xxxx` e total); período ausente → esclarecimento; sem dados → "sem dados no período" (FR-014 a FR-018)
+- [ ] T028 [US1] `app/agents/ouvidoria.py`: consultas por filtro, contagens/listas (no máximo 10 itens + total, orientando refinar o filtro; FR-010), distinção abertura × resposta e "Respondido" × "Concluído", prazo de 10 dias como parâmetro demonstrativo (FR-010 a FR-012)
+- [ ] T029 [P] [US1] `app/queries/financeiro.py`: `soma_despesas`, `soma_receitas`, `receita_liquida`, `comparar_periodos`, `orcamento_por_departamento`, `execucao_orcamentaria`, `inadimplencia`; colunas por whitelist, `NUMERIC`, `tipo_data` (padrão competência) e `criterio_gasto` (padrão **incorrida**)
+- [ ] T030 [US1] `app/agents/financeiro.py`: valida `ParamsFinanceiro`, executa a consulta, renderiza resposta por template em reais com o critério declarado (tipo, status, tipo de data, período, centro de custo/departamento) e fontes (consulta + arquivo + até 10 IDs `FIN-xxxx` e total); período ausente → esclarecimento (FR-035); `receita_liquida` = soma das receitas declarando que não há deduções (FR-036); sem dados → "sem dados no período" (FR-014 a FR-018)
 - [ ] T031 [US1] `app/llm/rules.py`: extração por regex de período, mês/ano em português, tipo, status, departamento e centro de custo para financeiro; `CC100–CC600`
 - [ ] T032 [US1] `app/orchestrator.py`: nó `agente_financeiro`, ramos de esclarecimento por parâmetro ausente, dois domínios candidatos ≥ 0,5 → esclarecimento (FR-005)
 - [ ] T033 [P] [US1] `tests/oracle.py`: cálculos independentes em Python puro (`csv` + `Decimal`) sobre os arquivos de `data/` para soma de receitas 2025, despesas pagas jan–mar/2025, maior orçamento jan/2026, contagens de ouvidoria
-- [ ] T034 [P] [US1] `tests/test_financeiro.py`: AV-T006, AV-T007, AV-T011 iguais ao oráculo (centavo); gasto sem critério → incorrida declarada; paga × incorrida; competência × vencimento; ano fora de 2025–2026
-- [ ] T035 [P] [US1] `tests/test_ouvidoria_filtros.py`: AV-T005 lista apenas os status do JSON; contagens e listas por filtro iguais ao oráculo
+- [ ] T034 [P] [US1] `tests/test_financeiro.py`: AV-T006, AV-T007, AV-T011 iguais ao oráculo (centavo); gasto sem critério → incorrida declarada; paga × incorrida; competência × vencimento; ano fora de 2025–2026; período ausente → esclarecimento; receita líquida igual à soma das receitas, com aviso
+- [ ] T035 [P] [US1] `tests/test_ouvidoria_filtros.py`: AV-T005 lista apenas os status do JSON; listas limitadas a 10 itens com o total; contagens e listas por filtro iguais ao oráculo
 - [ ] T036 [P] [US1] `tests/test_routing_multidominio.py`: pergunta que cruza domínios (ex.: reembolso) → esclarecimento, sem combinar agentes
 - [ ] T037 Gate da Fase 2: `pytest` verde, `docker compose up`, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
 
@@ -118,8 +118,10 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - [ ] T047 [US1] `app/orchestrator.py`: seleção `GeminiLLM` × `RulesLLM` por `GEMINI_API_KEY`, `modo` na resposta, limiar de confiança 0,6, fallback para regras na classificação quando o provedor falha (FR-034, FR-026)
 - [ ] T048 [US1] `app/agents/internal.py`: redação via `LLMClient.answer` com pergunta e trechos delimitados como dados; descartar a resposta se `fontes_usadas` ⊄ trechos recuperados e usar a versão extrativa
 - [ ] T049 [US2] `app/guards.py`: guarda determinística pré-LLM para credenciais, senhas e dados de terceiros (AV-T010, FR-028) com orientação aos canais de segurança/privacidade citando `04_seguranca_da_informacao.md` e `09_politica_privacidade.md`
+- [ ] T049a [US2] `app/guards.py`: `detectar_injecao(texto)` por regex sobre texto normalizado (minúsculas, sem acentos), em PT e EN — override ("ignore/desconsidere as instruções"), extração de prompt ("prompt do sistema", "revele suas instruções"), roleplay/jailbreak ("você agora é", "aja como", "modo desenvolvedor", "DAN"), marcadores de papel (`system:`, `<|...|>`); `recusa()` devolve mensagem de escopo antes do LLM (nó `guard`, sem mudar o grafo). Na indexação do RAG (T038), chunk que casar é registrado em log com aviso e não é indexado (FR-029). Sem classificador por modelo: decisão no DEVLOG
 - [ ] T050 [US2] `app/orchestrator.py`: ramos de esclarecimento (ambígua/baixa confiança), fora de escopo com explicação dos três domínios (FR-003, FR-004)
 - [ ] T051 [P] [US2] `tests/test_guards.py`: AV-T010 recusa sem chamar o LLM; variações de redação do pedido
+- [ ] T051a [P] [US2] `tests/test_guards.py`: injeção (override PT/EN, extração de prompt, roleplay/DAN, acentos/maiúsculas) → recusa sem chamar o `FakeLLM`; perguntas legítimas com "instruções" (ex.: "quais as instruções para pedir reembolso?") → não recusadas; chunk com instrução embutida não é indexado e não altera a resposta
 - [ ] T052 [P] [US2] `tests/test_llm_contracts.py`: com `FakeLLM`, saída malformada, enum inválido, campo extra e fonte fora dos trechos são rejeitados; falha do provedor gera erro claro e log com o mesmo `trace_id`
 - [ ] T053 [P] [US2] `tests/test_routing.py`: ambígua → esclarecimento, fora de escopo → explicação, baixa confiança, modo degradado marcado na resposta
 - [ ] T054 [US2] Smoke test adversarial informal contra a função que fala com o modelo (override de instruções, extração de prompt, fabricação de protocolo/valor, injeção em trecho recuperado, ofuscação/outro idioma): registrar prompts e resultados no DEVLOG como spot-check, não auditoria
@@ -136,7 +138,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - [ ] T056 [US5] `scripts/evaluate.py`: lê `data/testes/perguntas_avaliacao.json`, chama `POST /ask` com LLM real, verifica domínio (AV-T010 aceita recusa), fonte esperada ∈ fontes e conteúdo-chave por caso; compara AV-T006/T007/T011 ao oráculo; grava `docs/evaluation/avaliacao-<data>.jsonl` (por caso: `trace_id`, esperado × obtido, critério, resultado, latência) e imprime tabela
 - [ ] T057 [US5] Executar a avaliação com `GEMINI_API_KEY` real, conferir ausência de segredos no log e versionar o resultado; gerar também o log de amostra das interações em `docs/evaluation/interacoes-amostra.jsonl` sem dados sensíveis
 - [ ] T058 [US5] Analisar falhas da avaliação, ajustar e reexecutar; registrar tentativas e decisões no DEVLOG
-- [ ] T059 [P] [US3] `README.md` final: pré-requisitos, passo a passo, variáveis, subida, testes (`pytest` e avaliação), estrutura do repositório, solução de problemas
+- [ ] T059 [P] [US3] `README.md` final: pré-requisitos, passo a passo, variáveis, subida, testes (`pytest` e avaliação), estrutura do repositório, solução de problemas; seção "Segurança" com as camadas (guarda pré-LLM, detector de injeção, trechos delimitados, consultas fixas com papel `ro`, números e fontes por código), limitações (regex não cobre paráfrases/ofuscação) e "a implementar" (classificador dedicado, ex.: Prompt Guard ou LLM como juiz, e conjunto adversarial maior)
 - [ ] T060 [P] `docs/arquitetura.md`: visão geral, diagrama do grafo LangGraph (`draw_mermaid`), fluxo de dados, papéis de banco, rastreabilidade
 - [ ] T061 [P] `docs/decisoes.md`: decisões do briefing §8 e do clarify (LangGraph, BM25, Gemini, esclarecimento multi-domínio, incorrida, formato de fontes), alternativas descartadas
 - [ ] T062 [P] `docs/limitacoes.md`: limitações conhecidas e **pendências**: o que ficou pendente, o que foi tentado e por que não funcionou, como concluir, o que faria diferente

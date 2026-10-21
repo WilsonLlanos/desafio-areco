@@ -62,4 +62,50 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 
 ## Fase 1 — Fatia vertical
 
-_(aguardando início)_
+> Notas escritas no fim da implementação da fase, a partir do que foi feito na sessão `d859bda9…`.
+
+### 2026-10-21 — T003–T006 Setup
+- `.gitignore`, `.dockerignore` (extra, não estava em `tasks.md`), `.env.example` sem valores reais, `requirements.txt` com versões fixadas, `Dockerfile` (Python 3.12, usuário não-root) e `docker-compose.yml` (`db` com healthcheck, `app`, `data/` somente leitura, volume de logs).
+- **Decisão**: `google-genai` e `rank-bm25` ficaram fora do `requirements.txt` até as fases que os usam (3 e 4), por YAGNI; `tasks.md` T004 os listava.
+- **Problema**: este WSL não tem Docker nem PostgreSQL. Verificação feita com Python 3.12 (uv) e um PostgreSQL embutido via `pgserver` instalado **só no ambiente local de teste**, fora do `requirements.txt`.
+
+### 2026-10-21 — T007–T015 Base
+- `config.py`, `db.py`, `ingestion.py`, `tracing.py`, `api/schemas.py`, `llm/base.py` (`FakeLLM`), `llm/rules.py`, `guards.py`.
+- **Decisão**: o parsing/validação dos CSV é separado do upsert, para testar enums e valores inválidos sem banco. Ingestão valida tudo antes de abrir a transação (falha mostra arquivo e linha).
+- **Decisão**: papel `aurora_ro` criado na ingestão (`CREATE/ALTER ROLE` com senha como literal escapado, pois comandos utilitários não aceitam parâmetros); a API só conecta com ele.
+- **Decisão**: o canal de entrada não consta em `referencia_ouvidoria.json`; os valores válidos (Portal, E-mail, Telefone, Chat) vêm do dicionário de dados/briefing.
+- `RulesLLM`: domínio não reconhecido vira `fora_de_escopo` por enquanto (a decisão por BM25 é da Fase 3); mais de um domínio com palavras-chave vira `ambigua` com candidatos.
+- Testes: `tests/test_ingestion.py`.
+
+### 2026-10-21 — T016–T025 API, ouvidoria, frontend, rastreio
+- `main.py` (middleware de `trace_id`, `POST /ask`, `GET /traces/{id}`, `/health`, estáticos), `queries/ouvidoria.py`, `agents/ouvidoria.py`, `orchestrator.py` (grafo LangGraph: `guard → classificar → agente_ouvidoria | indisponivel | esclarecer | fora_de_escopo`), `frontend/`, `README.md` (rascunho).
+- **Decisão**: o nó `guard` existe mas `guards.recusa` retorna `None` até a Fase 4 (AV-T010), para manter o formato do grafo previsto no plano.
+- **Decisão**: protocolo com formato inválido (`OUV-12`, `OUV-00023`) pede esclarecimento; só `OUV-\d{4}` chega à consulta, em maiúsculas.
+- **Decisão**: financeiro e informações internas respondem "agente ainda não disponível" (`status=erro`) em vez de inventar resposta.
+- Testes: `tests/test_tracing.py`, `test_ouvidoria_protocolo.py` (AV-T009, AV-T004, formato inválido, tentativa de injeção de SQL), `test_api.py` (422, `/health`, 502 sem banco, frontend, classificação por regras).
+
+### 2026-10-21 — T026 Verificação no Docker
+- Docker iniciado pelo usuário. `docker compose up --build` subiu `db` (saudável) e `app`; a ingestão rodou na subida (300/144/180).
+- **Problema**: a porta 8000 do host estava ocupada por outro projeto (`rag_project-api-1`). **Solução**: porta publicada configurável, `APP_PORT` (padrão 8000, documentada no `.env.example`); o `.env` local usa 8010. O contêiner alheio não foi alterado.
+- Verificado nos contêineres: reingestão duas vezes sem duplicar; `docker compose run --rm app pytest` → 34 passados; AV-T009 e AV-T004 por HTTP; `/traces/{id}`; log persistido no volume; processo roda como `appuser`; com o `db` parado, `/ask` dá 502 claro e `/health` responde `banco: indisponivel`; ao religar o `db`, a API volta a responder sem reiniciar.
+
+### 2026-10-21 — Clarify, sessão 2 (sessão `d859bda9…`; entre a Fase 1 e a Fase 2)
+- Nova varredura de ambiguidades da spec; 3 lacunas que afetam a Fase 2, todas respondidas na opção recomendada pela IA:
+  - Pergunta financeira sem período → **pedir o período** (FR-035).
+  - "Receita líquida": a base não tem deduções (17 receitas, todas "Receita de serviços") → **total de receitas, declarando a ausência de deduções** (FR-036).
+  - Listas → **10 itens + total** (FR-010).
+- Aplicado em `spec.md`, `research.md` e `tasks.md` (T028, T029, T030, T034, T035). Nenhum código alterado.
+
+### Resumo da Fase 1 (gate concluído; falta o commit da fase)
+- **Objetivo**: ambiente executável com ingestão, `/ask`, ouvidoria por protocolo, frontend e rastreio.
+- **O que funciona (verificado)**: ingestão de 300/144/180 linhas e idempotente (executada duas vezes); papel `aurora_ro` lê e não escreve; AV-T009 e AV-T004 pela API real (uvicorn + curl); `trace_id` no cabeçalho, no corpo e em `/traces/{id}`; 422 para entrada inválida; 502 claro sem banco, com API ativa; frontend servido.
+- **Testes**: `pytest` 34 passados no contêiner e com PostgreSQL local; sem banco, 20 passados e 14 ignorados.
+- **Docker**: `Dockerfile`, `docker-compose.yml` e `scripts/start.sh` verificados em execução real (ver nota T026).
+- **Frontend**: verificado pelo usuário no navegador (localhost:8010) com a pergunta "Qual o status do protocolo OUV-0002?"; o aviso "Modo degradado: roteamento por regras, sem LLM." aparece, como esperado sem chave. A IA não tem navegador neste ambiente; o relato é do usuário.
+- **Limitações**: só ouvidoria por protocolo; o classificador por regras é simples.
+- **Pendências**: commit da fase (usuário) e aprovação explícita para a Fase 2.
+
+### 2026-10-21 — Decisão: guardrail de prompt injection/jailbreak (planejamento, sem código)
+- **Pergunta do autor**: incluir um classificador de prompt injection/jailbreak no RAG, pensando nos testes do avaliador, ou deixar como "a implementar"?
+- **Sugestão da IA (aceita)**: não usar classificador por modelo (Prompt Guard, Llama Guard, LLM como juiz). Ele quebraria o modo sem chave ou traria dependência pesada e latência, iria contra o princípio IV e nenhum AV-T exige isso. A arquitetura já limita o estrago: consultas fixas com papel `ro`, números e fontes escritos por código, saída do LLM validada por schema. O ponto exposto é o texto livre da resposta de informações internas.
+- **Decisão**: camada determinística na Fase 4 (T049a: `detectar_injecao` por regex na pergunta e na indexação; T051a: testes, incluindo falsos positivos). Trechos delimitados como dados já estavam previstos (T048). O classificador dedicado fica documentado no README como trabalho futuro (T059).

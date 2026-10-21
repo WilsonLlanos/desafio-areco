@@ -13,6 +13,9 @@
 - Q: Perguntas multi-domínio? → A: Pedir esclarecimento (FR-005).
 - Q: Critério padrão de "gasto"? → A: Despesa incorrida, declarada (FR-017).
 - Q: Provedor de LLM e sem chave? → A: Gemini; fallback por regras com aviso (FR-034).
+- Q: Pergunta financeira sem período? → A: Pedir o período (FR-035).
+- Q: "Receita líquida" sem deduções na base? → A: Total de receitas, declarando que não há deduções registradas (FR-036).
+- Q: Tamanho máximo de listas? → A: 10 itens mais o total (FR-010).
 
 **Input**: User description: "Use o briefing.md como entrada. Mantenha as decisões em aberto da seção 8. Vamos resolver no clarify" (fonte: `docs/briefing.md`)
 
@@ -104,6 +107,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - Pergunta que mistura domínios (ex.: reembolso como política e como lançamento).
 - Protocolo com formato inválido (ex.: "OUV-12") ou em minúsculas.
 - Período sem lançamentos, mês inexistente ou ano fora de 2025–2026.
+- Pergunta financeira sem período (ex.: "Qual o total de despesas?"): o sistema pede o período.
 - Pergunta financeira sem critério explícito (gasto: pago ou incorrido; competência ou vencimento).
 - Tentativa de prompt injection na pergunta ou no conteúdo recuperado (ex.: "ignore as instruções anteriores").
 - Provedor de LLM indisponível, lento ou sem chave configurada.
@@ -129,7 +133,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 
 **Agente de ouvidoria**
 - **FR-009**: MUST buscar protocolo por correspondência exata (formato `OUV-NNNN`) e nunca inventar protocolo; sem correspondência, informar que não foi encontrado.
-- **FR-010**: MUST permitir consultas por status, categoria, prioridade, canal e intervalo de data de abertura, e responder contagens e listas dessas consultas.
+- **FR-010**: MUST permitir consultas por status, categoria, prioridade, canal e intervalo de data de abertura, e responder contagens e listas dessas consultas. Listas MUST mostrar no máximo 10 itens e sempre informar o total, orientando como refinar o filtro quando houver mais.
 - **FR-011**: MUST responder perguntas de referência (ex.: lista de status, categorias, prioridades válidas) usando somente os valores enumerados na base de referência.
 - **FR-012**: MUST diferenciar data de abertura de data de resposta e "Respondido" de "Concluído", e tratar o prazo de 10 dias como parâmetro demonstrativo, não prazo legal.
 - **FR-013**: MUST NOT inferir a identidade de manifestantes.
@@ -166,6 +170,8 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-032**: Resultados financeiros esperados MUST ser verificáveis por cálculo independente sobre os arquivos de dados.
 - **FR-033**: A entrega MUST incluir README com passo a passo, arquivo de exemplo de variáveis, descrição de arquitetura, decisões, limitações conhecidas e como testar, além do registro contínuo do desenvolvimento.
 - **FR-034**: O provedor de LLM padrão MUST ser o Google Gemini. Sem chave configurada, o sistema MUST operar em modo degradado, roteando por regras/palavras-chave e avisando a degradação ao usuário.
+- **FR-035**: Quando uma pergunta financeira não informar o período, o sistema MUST pedir esclarecimento sobre o período, sem assumir intervalo.
+- **FR-036**: Para "receita líquida", como a base não contém deduções registradas, o sistema MUST responder com o total das receitas e declarar que não há deduções registradas (líquida igual à soma das receitas).
 
 ### Key Entities
 

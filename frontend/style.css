@@ -1,0 +1,18 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6f8; color: #1d2733; }
+main { max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+h1 { margin-bottom: .25rem; }
+.sub { color: #566; margin-top: 0; }
+textarea { width: 100%; padding: .7rem; font: inherit; border: 1px solid #b8c2cc; border-radius: 6px; resize: vertical; }
+button { margin-top: .5rem; padding: .6rem 1.2rem; font: inherit; border: 0; border-radius: 6px; background: #1f6feb; color: #fff; cursor: pointer; }
+button:disabled { background: #8aa9d6; cursor: wait; }
+.aviso { background: #fff4ce; border: 1px solid #e6c94a; padding: .5rem .8rem; border-radius: 6px; margin-bottom: 1rem; }
+.estado { margin: 1rem 0; color: #566; }
+.estado.erro { color: #a4262c; font-weight: 600; }
+#resultado { background: #fff; border: 1px solid #d5dce3; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+.resposta { white-space: pre-wrap; margin-top: 0; }
+.meta { display: grid; grid-template-columns: 8rem 1fr; gap: .3rem .8rem; font-size: .9rem; margin: 0; }
+.meta dt { color: #566; }
+.meta dd { margin: 0; }
+.meta ul { margin: 0; padding-left: 1.1rem; }
+code { word-break: break-all; }
