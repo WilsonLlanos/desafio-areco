@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.1.1 (PATCH: documentos referem os casos de avaliação como AV-Txxx; data/ intocado)
-- Histórico: 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
+- Version change: 1.1.1 → 1.2.0 (MINOR: princípio IV passa a permitir LangGraph como orquestrador de agentes)
+- Histórico: 1.1.0 → 1.1.1 (PATCH: documentos referem os casos de avaliação como AV-Txxx; data/ intocado); 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
   (1.0.0 foi a versão inicial, a partir do template não preenchido)
 - Princípios adicionados: I. Rastreabilidade; II. Consultas parametrizadas, nunca SQL do modelo;
   III. Docker Compose como único meio de execução; IV. Simplicidade; V. Testes (pytest com LLM mockada + script de avaliação com LLM real);
@@ -37,8 +37,9 @@ clone limpo, seguindo apenas o `README.md`. A ingestão dos dados MUST ser idemp
 MUST vir de variáveis de ambiente documentadas em `.env.example`.
 
 ### IV. Simplicidade, sem over-engineering
-Implementar apenas o necessário para o escopo do briefing. Preferir código próprio enxuto a
-frameworks de agentes; frontend em HTML/CSS/JS puro. Novas camadas, dependências ou abstrações MUST
+Implementar apenas o necessário para o escopo do briefing. Frameworks de agentes são
+permitidos; adota-se LangGraph apenas para o grafo de orquestração (sem LangChain além do necessário);
+frontend em HTML/CSS/JS puro. Novas camadas, dependências ou abstrações MUST
 ser justificadas por uma necessidade presente (YAGNI); a justificativa MUST ficar no plano ou no
 DEVLOG. O código MUST ser explicável pelo autor.
 
@@ -113,4 +114,4 @@ MAJOR para remoção ou redefinição incompatível de princípios; MINOR para n
 material; PATCH para esclarecimentos. A conformidade é verificada no gate de cada fase e na etapa de
 plano (Constitution Check). Orientação de uso diário: `CLAUDE.md` e `docs/DEVLOG.md`.
 
-**Version**: 1.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
+**Version**: 1.2.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21
