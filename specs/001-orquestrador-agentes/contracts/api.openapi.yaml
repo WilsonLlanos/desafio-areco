@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: Orquestrador Aurora
+  version: 0.1.0
+paths:
+  /ask:
+    post:
+      summary: Faz uma pergunta em linguagem natural
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pergunta]
+              properties:
+                pergunta: { type: string, minLength: 1, maxLength: 1000 }
+      responses:
+        "200":
+          description: Resposta (inclui esclarecimento, fora de escopo, recusa e não encontrado)
+          headers:
+            X-Trace-Id: { schema: { type: string, format: uuid } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AskResponse" }
+        "422":
+          description: Entrada vazia, só símbolos ou acima de 1000 caracteres
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erro" }
+        "502":
+          description: Falha de dependência (LLM ou banco); mensagem clara, serviço segue ativo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erro" }
+  /traces/{trace_id}:
+    get:
+      summary: Registro de interação por identificador de rastreio
+      parameters:
+        - { name: trace_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Registro estruturado da requisição
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Interacao" }
+        "404":
+          description: Identificador desconhecido
+  /health:
+    get:
+      summary: Estado da API, do banco e do modo do LLM
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  banco: { type: string, enum: [ok, indisponivel] }
+                  modo: { type: string, enum: [llm, degradado] }
+components:
+  schemas:
+    Fonte:
+      type: object
+      required: [tipo, ref]
+      properties:
+        tipo: { type: string, enum: [arquivo, protocolo, lancamento, consulta] }
+        ref: { type: string }
+        detalhe: { type: string, nullable: true }
+    AskResponse:
+      type: object
+      required: [trace_id, resposta, dominio, agente, confianca, fontes, status, modo, latencia_ms]
+      properties:
+        trace_id: { type: string, format: uuid }
+        resposta: { type: string }
+        dominio:
+          type: string
+          enum: [financeiro, informacoes_internas, ouvidoria, ambigua, fora_de_escopo]
+        agente:
+          type: string
+          enum: [orquestrador, informacoes_internas, ouvidoria, financeiro]
+        confianca: { type: number, minimum: 0, maximum: 1 }
+        fontes:
+          type: array
+          items: { $ref: "#/components/schemas/Fonte" }
+        status:
+          type: string
+          enum: [ok, nao_encontrado, esclarecimento, fora_de_escopo, recusado, erro]
+        modo: { type: string, enum: [llm, degradado] }
+        latencia_ms: { type: integer }
+    Erro:
+      type: object
+      required: [trace_id, detail]
+      properties:
+        trace_id: { type: string, format: uuid }
+        detail: { type: string }
+    Interacao:
+      type: object
+      required: [timestamp, trace_id, pergunta, status, latencia_ms]
+      properties:
+        timestamp: { type: string, format: date-time }
+        trace_id: { type: string, format: uuid }
+        pergunta: { type: string }
+        dominio_previsto: { type: string }
+        confianca: { type: number }
+        agente: { type: string }
+        fontes: { type: array, items: { type: string } }
+        latencia_ms: { type: integer }
+        status: { type: string }
+        modo: { type: string }
+        erro: { type: string, nullable: true }
