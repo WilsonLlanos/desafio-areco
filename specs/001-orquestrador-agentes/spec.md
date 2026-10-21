@@ -1,10 +1,18 @@
 # Feature Specification: Orquestrador de Agentes de Perguntas (Aurora)
 
-**Feature Branch**: `001-orquestrador-agentes` (sem branch dedicada; trabalha-se em `master`)
+**Feature Branch**: `001-orquestrador-agentes` (branch criada a partir de `main`)
 
 **Created**: 2026-10-20
 
 **Status**: Draft
+
+## Clarifications
+
+### Session 2026-10-21
+
+- Q: Perguntas multi-domínio? → A: Pedir esclarecimento (FR-005).
+- Q: Critério padrão de "gasto"? → A: Despesa incorrida, declarada (FR-017).
+- Q: Provedor de LLM e sem chave? → A: Gemini; fallback por regras com aviso (FR-034).
 
 **Input**: User description: "Use o briefing.md como entrada. Mantenha as decisões em aberto da seção 8. Vamos resolver no clarify" (fonte: `docs/briefing.md`)
 
@@ -112,7 +120,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-002**: O sistema MUST classificar cada pergunta em um de: financeiro, informações internas, ouvidoria, ambígua ou fora de escopo.
 - **FR-003**: Perguntas de baixa confiança ou ambíguas MUST resultar em pedido de esclarecimento, sem atribuir domínio arbitrário.
 - **FR-004**: Perguntas fora de escopo MUST resultar em explicação de que apenas os três domínios são cobertos.
-- **FR-005**: O comportamento para perguntas que cruzam domínios MUST ser definido [NEEDS CLARIFICATION: responder só o domínio principal, pedir esclarecimento ou combinar vários agentes? — decisão 4 da seção 8 do briefing].
+- **FR-005**: Quando a pergunta cruzar domínios, o sistema MUST pedir esclarecimento ao usuário sobre qual domínio responder, sem combinar agentes.
 
 **Agente de informações internas**
 - **FR-006**: MUST responder somente com base nos documentos internos e no FAQ, citando o arquivo-fonte.
@@ -130,7 +138,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-014**: MUST calcular totais, comparações e indicadores (receita, despesas, execução orçamentária, inadimplência) de forma determinística a partir dos lançamentos e do orçamento, nunca por estimativa do modelo de linguagem.
 - **FR-015**: MUST declarar na resposta o critério aplicado (tipo, status, tipo de data, período, centro de custo/departamento).
 - **FR-016**: MUST aplicar as regras: despesa paga = tipo Despesa e status Pago; despesa incorrida = todos os status; não confundir competência com vencimento.
-- **FR-017**: Quando a pergunta não especificar o critério de "gasto", o sistema MUST seguir uma interpretação padrão [NEEDS CLARIFICATION: assumir paga ou incorrida? — decisão 5 da seção 8 do briefing], sempre declarando-a.
+- **FR-017**: Quando a pergunta não especificar o critério de "gasto", o sistema MUST assumir despesa **incorrida**, sempre declarando essa interpretação na resposta.
 - **FR-018**: Valores monetários MUST ser tratados com precisão decimal exata e exibidos em reais.
 - **FR-019**: O modelo de linguagem MUST NOT gerar consultas executáveis sobre os dados; o acesso aos dados MUST ocorrer apenas por consultas predefinidas e parametrizadas, restritas aos domínios permitidos.
 
@@ -157,7 +165,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-031**: MUST existir uma suíte de testes de lógica que roda sem LLM real e sem rede, e um script de avaliação separado que executa AV-T001–AV-T012 com LLM real e gera log de execução por caso.
 - **FR-032**: Resultados financeiros esperados MUST ser verificáveis por cálculo independente sobre os arquivos de dados.
 - **FR-033**: A entrega MUST incluir README com passo a passo, arquivo de exemplo de variáveis, descrição de arquitetura, decisões, limitações conhecidas e como testar, além do registro contínuo do desenvolvimento.
-- **FR-034**: A escolha do provedor de LLM, e o comportamento sem chave configurada, MUST estar definida [NEEDS CLARIFICATION: provedor padrão e modo de degradação sem chave (ex.: roteamento por regras) — decisão 1 da seção 8 do briefing].
+- **FR-034**: O provedor de LLM padrão MUST ser o Google Gemini. Sem chave configurada, o sistema MUST operar em modo degradado, roteando por regras/palavras-chave e avisando a degradação ao usuário.
 
 ### Key Entities
 
@@ -178,7 +186,7 @@ Mantidas intencionalmente sem resolução, conforme pedido. As decisões 1, 4 e 
 
 1. **Provedor de LLM e chave:** qual provedor padrão; modo de degradação sem chave (ex.: roteamento por regras).
 2. **Estratégia de recuperação para documentos internos:** vetorial dentro do mesmo banco vs. índice em memória/BM25 etc. (corpus de ~17 itens).
-3. **Framework de agentes:** biblioteca existente vs. implementação própria enxuta.
+3. **Framework de agentes:** ~~biblioteca existente vs. implementação própria~~ → decidido: LangGraph (ver `research.md`).
 4. **Perguntas que cruzam domínios:** um domínio principal, pedido de esclarecimento ou resposta combinada.
 5. **Interpretação padrão de "gasto"** sem critério explícito: paga ou incorrida.
 6. **Formato das fontes** na resposta: nome do arquivo, ID de lançamento/protocolo, consulta aplicada.

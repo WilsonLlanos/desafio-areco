@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain — 3 marcadores mantidos de propósito (FR-005, FR-017, FR-034), a pedido do usuário; resolver no `/speckit.clarify`
+- [x] No [NEEDS CLARIFICATION] markers remain — resolvidos na sessão de clarify de 2026-10-21
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
