@@ -34,3 +34,10 @@ def client(db_settings) -> TestClient:
 def client_sem_banco(settings) -> TestClient:
     quebrado = dataclasses.replace(settings, db_host="127.0.0.1", db_port=1)
     return TestClient(create_app(quebrado))
+
+
+@pytest.fixture()
+def conn(db_settings):
+    from app.db import connect_ro
+    with connect_ro(db_settings) as c:
+        yield c

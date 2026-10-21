@@ -109,3 +109,39 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Pergunta do autor**: incluir um classificador de prompt injection/jailbreak no RAG, pensando nos testes do avaliador, ou deixar como "a implementar"?
 - **Sugestão da IA (aceita)**: não usar classificador por modelo (Prompt Guard, Llama Guard, LLM como juiz). Ele quebraria o modo sem chave ou traria dependência pesada e latência, iria contra o princípio IV e nenhum AV-T exige isso. A arquitetura já limita o estrago: consultas fixas com papel `ro`, números e fontes escritos por código, saída do LLM validada por schema. O ponto exposto é o texto livre da resposta de informações internas.
 - **Decisão**: camada determinística na Fase 4 (T049a: `detectar_injecao` por regex na pergunta e na indexação; T051a: testes, incluindo falsos positivos). Trechos delimitados como dados já estavam previstos (T048). O classificador dedicado fica documentado no README como trabalho futuro (T059).
+
+---
+
+## Fase 2 — Ouvidoria completa e Financeiro
+
+> Notas escritas no fim da implementação da fase, na sessão `d859bda9…`.
+
+### 2026-10-21 — T027–T028 Ouvidoria por filtros
+- `queries/ouvidoria.py`: `contar`, `listar` (no máximo 10 + total, ordem por abertura e protocolo) e `carregar_referencia`; filtros por whitelist de colunas.
+- `agents/ouvidoria.py` reescrito: despacha `buscar_protocolo`, `referencia`, `contar`, `listar`; valor fora da base de referência vira esclarecimento listando os válidos. `Resultado` foi movido para `agents/base.py` e ganhou `dados` (valores calculados, usados nos testes e não expostos pela API).
+- **Decisão**: `canal` não consta no JSON de referência; os canais válidos vêm do dicionário de dados e a fonte da resposta é `dicionario_de_dados.md`.
+
+### 2026-10-21 — T029–T031 Financeiro e regras
+- `queries/financeiro.py`: `ParamsFinanceiro` (Pydantic, `extra="forbid"`), somas por tipo/status/data, orçamento total e por departamento; colunas por whitelist, valores por `%s`, `Decimal`.
+- `agents/financeiro.py`: critério declarado em toda resposta; gasto sem critério → incorrida com aviso (FR-017); período ausente → esclarecimento (FR-035); `receita_liquida` = receitas com aviso de ausência de deduções (FR-036); ano fora de 2025–2026 → "não encontrado"; departamento validado contra o banco.
+- **Decisão (interpretação minha)**: *execução orçamentária* usa despesas **pagas** por padrão, porque `indicadores_e_regras.json` define o indicador como "despesas realizadas ÷ orçamento" e realizadas = pagas; difere do padrão "incorrida" de FR-017, que vale para perguntas de "gasto". A resposta declara a escolha.
+- **Decisão**: inadimplência calculada em **valor** (atrasadas ÷ total de receitas), declarado na resposta; a definição do JSON não diz valor ou quantidade.
+- `llm/rules.py`: extração por regex de período (mês, intervalo, trimestre, semestre), tipo de consulta, critério pago/incorrido, vencimento, centro de custo e departamento. "Financeiro" como departamento só vale após "departamento/área/setor", pois também é o nome do domínio.
+- `periodo.py`: conversão de texto em intervalos [início, fim).
+
+### 2026-10-21 — T032 Orquestrador
+- Nó `agente_financeiro`; `montar_grafo` recebe `data_dir` para carregar a referência de ouvidoria. Palavras-chave passaram a casar por prefixo (plural e flexões: "receitas", "gastamos").
+- **Decisão**: categorias de ouvidoria que também são assuntos de políticas ("reembolso", "privacidade") não geram ambiguidade quando a pergunta já tem palavra forte de ouvidoria ("manifestações", "protocolo"). Cruzamentos reais (ex.: despesa + reembolso, manifestações + despesas) continuam gerando esclarecimento (FR-005).
+
+### 2026-10-21 — T033–T036 Testes
+- `tests/oracle.py` calcula tudo de novo em `csv` + `Decimal`, sem usar o código da aplicação. `test_financeiro.py`, `test_ouvidoria_filtros.py`, `test_routing_multidominio.py`, `test_periodo.py`: 47 testes novos.
+- **Bug achado pelos testes**: "foram abertas em janeiro de 2026" era lido como status *Aberto* em vez de data de abertura. **Correção**: o padrão do status ignora "aberta(s)" seguida de preposição + data; há teste dos dois sentidos.
+- **Bug achado pelos testes**: "Quanto gastamos em 2024?" caía em fora de escopo, pois a lista tinha só "gasto"; trocado pela raiz "gast".
+
+### Resumo da Fase 2
+- **Objetivo**: AV-T005, AV-T006, AV-T007 e AV-T011 por código determinístico, com critério declarado.
+- **O que funciona (verificado)**: AV-T005 (lista exatamente os 5 status do JSON); AV-T006 (R$ 305.937,01, 27 lançamentos), AV-T007 (Tecnologia, R$ 43.229,05) e AV-T011 (R$ 275.727,70) iguais ao oráculo independente, centavo a centavo; contagens e listas de ouvidoria iguais ao oráculo; listas limitadas a 10 com o total; período ausente pede esclarecimento; perguntas que cruzam domínios pedem esclarecimento.
+- **Testes**: `pytest` 81 passados no contêiner e com PostgreSQL local, sem rede; `ruff` (erros e imports não usados) limpo. Perguntas reais por HTTP no Docker conferidas.
+- **Limitações**: a extração de parâmetros por regras é simples (categoria de lançamento não é extraída; comparação só entre dois anos; períodos relativos como "mês passado" não são entendidos); sem LLM, perguntas fora desses padrões caem em esclarecimento. AV-T001–T003, T008 e T012 (informações internas) e AV-T010 (recusa) ficam para as Fases 3 e 4.
+- **Pendências**: commit da fase e aprovação para a Fase 3.
+

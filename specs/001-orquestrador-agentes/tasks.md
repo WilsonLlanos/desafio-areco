@@ -77,17 +77,17 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: perguntas financeiras e de ouvidoria por filtro retornam valores iguais ao cálculo independente sobre os CSV.
 
-- [ ] T027 [P] [US1] `app/queries/ouvidoria.py`: `contar` e `listar` com filtros (status, categoria, prioridade, canal, intervalo de `data_abertura`) e `referencia` (enums de `referencia_ouvidoria.json`)
-- [ ] T028 [US1] `app/agents/ouvidoria.py`: consultas por filtro, contagens/listas (no máximo 10 itens + total, orientando refinar o filtro; FR-010), distinção abertura × resposta e "Respondido" × "Concluído", prazo de 10 dias como parâmetro demonstrativo (FR-010 a FR-012)
-- [ ] T029 [P] [US1] `app/queries/financeiro.py`: `soma_despesas`, `soma_receitas`, `receita_liquida`, `comparar_periodos`, `orcamento_por_departamento`, `execucao_orcamentaria`, `inadimplencia`; colunas por whitelist, `NUMERIC`, `tipo_data` (padrão competência) e `criterio_gasto` (padrão **incorrida**)
-- [ ] T030 [US1] `app/agents/financeiro.py`: valida `ParamsFinanceiro`, executa a consulta, renderiza resposta por template em reais com o critério declarado (tipo, status, tipo de data, período, centro de custo/departamento) e fontes (consulta + arquivo + até 10 IDs `FIN-xxxx` e total); período ausente → esclarecimento (FR-035); `receita_liquida` = soma das receitas declarando que não há deduções (FR-036); sem dados → "sem dados no período" (FR-014 a FR-018)
-- [ ] T031 [US1] `app/llm/rules.py`: extração por regex de período, mês/ano em português, tipo, status, departamento e centro de custo para financeiro; `CC100–CC600`
-- [ ] T032 [US1] `app/orchestrator.py`: nó `agente_financeiro`, ramos de esclarecimento por parâmetro ausente, dois domínios candidatos ≥ 0,5 → esclarecimento (FR-005)
-- [ ] T033 [P] [US1] `tests/oracle.py`: cálculos independentes em Python puro (`csv` + `Decimal`) sobre os arquivos de `data/` para soma de receitas 2025, despesas pagas jan–mar/2025, maior orçamento jan/2026, contagens de ouvidoria
-- [ ] T034 [P] [US1] `tests/test_financeiro.py`: AV-T006, AV-T007, AV-T011 iguais ao oráculo (centavo); gasto sem critério → incorrida declarada; paga × incorrida; competência × vencimento; ano fora de 2025–2026; período ausente → esclarecimento; receita líquida igual à soma das receitas, com aviso
-- [ ] T035 [P] [US1] `tests/test_ouvidoria_filtros.py`: AV-T005 lista apenas os status do JSON; listas limitadas a 10 itens com o total; contagens e listas por filtro iguais ao oráculo
-- [ ] T036 [P] [US1] `tests/test_routing_multidominio.py`: pergunta que cruza domínios (ex.: reembolso) → esclarecimento, sem combinar agentes
-- [ ] T037 Gate da Fase 2: `pytest` verde, `docker compose up`, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
+- [X] T027 [P] [US1] `app/queries/ouvidoria.py`: `contar` e `listar` com filtros (status, categoria, prioridade, canal, intervalo de `data_abertura`) e `referencia` (enums de `referencia_ouvidoria.json`)
+- [X] T028 [US1] `app/agents/ouvidoria.py`: consultas por filtro, contagens/listas (no máximo 10 itens + total, orientando refinar o filtro; FR-010), distinção abertura × resposta e "Respondido" × "Concluído", prazo de 10 dias como parâmetro demonstrativo (FR-010 a FR-012)
+- [X] T029 [P] [US1] `app/queries/financeiro.py`: `soma_despesas`, `soma_receitas`, `receita_liquida`, `comparar_periodos`, `orcamento_por_departamento`, `execucao_orcamentaria`, `inadimplencia`; colunas por whitelist, `NUMERIC`, `tipo_data` (padrão competência) e `criterio_gasto` (padrão **incorrida**)
+- [X] T030 [US1] `app/agents/financeiro.py`: valida `ParamsFinanceiro`, executa a consulta, renderiza resposta por template em reais com o critério declarado (tipo, status, tipo de data, período, centro de custo/departamento) e fontes (consulta + arquivo + até 10 IDs `FIN-xxxx` e total); período ausente → esclarecimento (FR-035); `receita_liquida` = soma das receitas declarando que não há deduções (FR-036); sem dados → "sem dados no período" (FR-014 a FR-018)
+- [X] T031 [US1] `app/llm/rules.py`: extração por regex de período, mês/ano em português, tipo, status, departamento e centro de custo para financeiro; `CC100–CC600`
+- [X] T032 [US1] `app/orchestrator.py`: nó `agente_financeiro`, ramos de esclarecimento por parâmetro ausente, dois domínios candidatos ≥ 0,5 → esclarecimento (FR-005)
+- [X] T033 [P] [US1] `tests/oracle.py`: cálculos independentes em Python puro (`csv` + `Decimal`) sobre os arquivos de `data/` para soma de receitas 2025, despesas pagas jan–mar/2025, maior orçamento jan/2026, contagens de ouvidoria
+- [X] T034 [P] [US1] `tests/test_financeiro.py`: AV-T006, AV-T007, AV-T011 iguais ao oráculo (centavo); gasto sem critério → incorrida declarada; paga × incorrida; competência × vencimento; ano fora de 2025–2026; período ausente → esclarecimento; receita líquida igual à soma das receitas, com aviso
+- [X] T035 [P] [US1] `tests/test_ouvidoria_filtros.py`: AV-T005 lista apenas os status do JSON; listas limitadas a 10 itens com o total; contagens e listas por filtro iguais ao oráculo
+- [X] T036 [P] [US1] `tests/test_routing_multidominio.py`: pergunta que cruza domínios (ex.: reembolso) → esclarecimento, sem combinar agentes
+- [X] T037 Gate da Fase 2: `pytest` verde, `docker compose up`, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
 
 ---
 

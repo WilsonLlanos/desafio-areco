@@ -3,14 +3,16 @@
 O grafo só roteia. Os nós chamam o LLMClient e as consultas parametrizadas; o LLM não escolhe
 ferramentas nem gera SQL (constituição II e IV).
 """
+from pathlib import Path
 from typing import Callable, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
 from app import guards
-from app.agents import ouvidoria
+from app.agents import financeiro, ouvidoria
 from app.api.schemas import Classificacao, Fonte
 from app.llm.base import LLMClient
+from app.queries import ouvidoria as ouvidoria_q
 
 NOMES = {"financeiro": "financeiro", "informacoes_internas": "informações internas", "ouvidoria": "ouvidoria"}
 
@@ -29,7 +31,9 @@ class Estado(TypedDict, total=False):
     fontes: list[Fonte]
 
 
-def montar_grafo(llm: LLMClient, conn_factory: Callable, limiar: float):
+def montar_grafo(llm: LLMClient, conn_factory: Callable, limiar: float, data_dir: Path):
+    ref = ouvidoria_q.carregar_referencia(data_dir)
+
     def guard(s: Estado) -> Estado:
         msg = guards.recusa(s["pergunta"])
         if msg:
@@ -43,8 +47,14 @@ def montar_grafo(llm: LLMClient, conn_factory: Callable, limiar: float):
     def agente_ouvidoria(s: Estado) -> Estado:
         params = llm.extract_params("ouvidoria", s["pergunta"])
         with conn_factory() as conn:
-            r = ouvidoria.responder(conn, params)
+            r = ouvidoria.responder(conn, params, ref)
         return {"resposta": r.resposta, "status": r.status, "fontes": r.fontes, "agente": "ouvidoria"}
+
+    def agente_financeiro(s: Estado) -> Estado:
+        params = llm.extract_params("financeiro", s["pergunta"])
+        with conn_factory() as conn:
+            r = financeiro.responder(conn, params)
+        return {"resposta": r.resposta, "status": r.status, "fontes": r.fontes, "agente": "financeiro"}
 
     def indisponivel(s: Estado) -> Estado:
         nome = NOMES[s["classificacao"].dominio]
@@ -71,19 +81,21 @@ def montar_grafo(llm: LLMClient, conn_factory: Callable, limiar: float):
         c = s["classificacao"]
         if c.dominio == "ambigua" or (c.dominio != "fora_de_escopo" and c.confianca < limiar):
             return "esclarecer"
-        return {"ouvidoria": "agente_ouvidoria", "financeiro": "indisponivel",
+        return {"ouvidoria": "agente_ouvidoria", "financeiro": "agente_financeiro",
                 "informacoes_internas": "indisponivel", "fora_de_escopo": "fora_de_escopo"}[c.dominio]
 
     g = StateGraph(Estado)
     for nome, fn in [("guard", guard), ("classificar", classificar), ("agente_ouvidoria", agente_ouvidoria),
-                     ("indisponivel", indisponivel), ("esclarecer", esclarecer),
+                     ("agente_financeiro", agente_financeiro), ("indisponivel", indisponivel),
+                     ("esclarecer", esclarecer),
                      ("fora_de_escopo", fora_de_escopo)]:
         g.add_node(nome, fn)
     g.add_edge(START, "guard")
     g.add_conditional_edges("guard", apos_guard, {"fim": END, "classificar": "classificar"})
     g.add_conditional_edges("classificar", rotear, {
-        "agente_ouvidoria": "agente_ouvidoria", "indisponivel": "indisponivel",
+        "agente_ouvidoria": "agente_ouvidoria", "agente_financeiro": "agente_financeiro",
+        "indisponivel": "indisponivel",
         "esclarecer": "esclarecer", "fora_de_escopo": "fora_de_escopo"})
-    for no in ("agente_ouvidoria", "indisponivel", "esclarecer", "fora_de_escopo"):
+    for no in ("agente_ouvidoria", "agente_financeiro", "indisponivel", "esclarecer", "fora_de_escopo"):
         g.add_edge(no, END)
     return g.compile()

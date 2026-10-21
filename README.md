@@ -3,10 +3,10 @@
 Aplicação web em que um orquestrador (LangGraph) classifica a pergunta e a encaminha ao agente
 especializado: **financeiro**, **informações internas** ou **ouvidoria**. Dados sintéticos (empresa fictícia).
 
-> **Estado: Fase 1 de 5.** Funciona: subida via Docker, carga idempotente das bases, `POST /ask` com
-> roteamento por regras, agente de ouvidoria (busca por protocolo), frontend de chat e rastreio por
-> `trace_id`. Ainda não implementados: agente financeiro, agente de informações internas, filtros de
-> ouvidoria e uso do Gemini. Ver `specs/001-orquestrador-agentes/tasks.md` e `docs/DEVLOG.md`.
+> **Estado: Fase 2 de 5.** Funciona: subida via Docker, carga idempotente das bases, `POST /ask` com
+> roteamento por regras, agente de ouvidoria (protocolo, filtros, contagens, listas e valores válidos),
+> agente financeiro (receitas, despesas, orçamento, execução, inadimplência, comparação), frontend de
+> chat e rastreio por `trace_id`. Ainda não implementados: agente de informações internas e uso do Gemini. Ver `specs/001-orquestrador-agentes/tasks.md` e `docs/DEVLOG.md`.
 
 ## Executar
 
@@ -19,7 +19,8 @@ docker compose up --build
 
 Abra http://localhost:8000 (se a porta estiver ocupada, defina `APP_PORT` no `.env`). A carga das bases roda sozinha na subida (e pode ser repetida sem duplicar).
 
-Exemplos: `Qual o status do protocolo OUV-0002?` e `Existe o protocolo OUV-9999?`.
+Exemplos: `Qual o status do protocolo OUV-0002?`, `Quais status podem aparecer na ouvidoria?`,
+`Quanto foi gasto em despesas pagas de janeiro a março de 2025?` e `Qual departamento tem maior orçamento em janeiro de 2026?`.
 
 ```bash
 curl -s localhost:8000/ask -H 'content-type: application/json' \
