@@ -12,7 +12,7 @@ Aplicação web de chat em que um orquestrador classifica a pergunta (financeiro
 
 **Language/Version**: Python 3.12
 
-**Primary Dependencies**: FastAPI + Uvicorn, Pydantic v2, `psycopg[binary]` 3, `rank-bm25`, `langgraph`, `google-genai` (Gemini) (logging JSON com o `logging` padrão)
+**Primary Dependencies**: FastAPI + Uvicorn, Pydantic v2, `psycopg[binary]` 3, `langgraph`, `google-genai` (Gemini) (logging JSON com o `logging` padrão); BM25 implementado em `app/rag/index.py`, sem biblioteca (ver `research.md` §1)
 
 **Storage**: PostgreSQL 16 (3 tabelas de `data/sql/schema.sql`); índice BM25 em memória reconstruído na subida; log de interações em JSON Lines (volume Docker)
 
@@ -88,7 +88,8 @@ app/
 │   ├── internal.py      # RAG
 │   ├── ouvidoria.py
 │   └── financeiro.py
-├── rag/index.py         # chunking por seção + BM25 + metadados
+├── rag/index.py         # índice BM25 próprio (item por documento/FAQ) + metadados
+├── texto.py             # normalização, stopwords e radicais (RAG e regras)
 ├── queries/             # consultas parametrizadas (ouvidoria.py, financeiro.py)
 ├── db.py                # conexão (papel ro) e helpers
 ├── periodo.py           # períodos em português → intervalos de datas
@@ -108,7 +109,7 @@ Dockerfile, docker-compose.yml, .env.example, requirements.txt, README.md, CLAUD
 
 1. **Fase 1 — Fatia vertical**: Docker Compose, ingestão idempotente, papel `ro`, `POST /ask` com roteamento por regras, agente de ouvidoria (protocolo exato), frontend mínimo, `trace_id` + log JSONL, `CLAUDE.md` (inclui a instrução de guardar o histórico das conversas desde o início, em `docs/conversas/`), DEVLOG (com o registro da emenda 1.2.0). Cobre AV-T004, AV-T009.
 2. **Fase 2 — Ouvidoria completa e Financeiro**: filtros e referência (AV-T005); catálogo financeiro com critério declarado (AV-T006, AV-T007, AV-T011); testes com cálculo independente.
-3. **Fase 3 — Informações internas (RAG)**: chunking, BM25, extrativo sem chave; limites e encaminhamentos (AV-T001–T003, T008, T012).
+3. **Fase 3 — Informações internas (RAG)**: indexação, BM25, extrativo sem chave; limites e encaminhamentos (AV-T001–T003, T008, T012).
 4. **Fase 4 — Gemini e segurança**: classificação com confiança, extração de parâmetros, redação do agente interno, esclarecimento/fora de escopo/recusa (AV-T010), erros do provedor, smoke test adversarial.
 5. **Fase 5 — Avaliação e documentação**: `scripts/evaluate.py` + log de avaliação versionado e log de amostra das interações (`docs/evaluation/`, sem dados sensíveis), README, arquitetura/decisões/limitações, seção de pendências (o que ficou pendente, o que foi tentado, como concluir, o que faria diferente), revisão de segredos e exportação sanitizada das conversas.
 

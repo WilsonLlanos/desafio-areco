@@ -228,3 +228,11 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Limitações e pendências**: resposta extrativa (sem redação por LLM até a Fase 4) pode trazer linhas pouco relevantes em perguntas genéricas; radical por truncamento é grosseiro; uma linha injetada remove o documento inteiro do índice. AV-T010 ainda cai em fora de escopo sem orientar o canal autorizado (Fase 4, T049). Commit da fase e aprovação para a Fase 4.
 - **Processo**: notas do DEVLOG escritas tarefa a tarefa, antes de cada `[X]` (correção do achado C1).
 
+### 2026-10-22 — Correções da análise da Fase 3 (`/speckit-analyze`)
+- **Contexto**: análise de consistência da Fase 3 com plano, constituição e spec. Nenhum achado crítico ou alto; 1 médio e 5 baixos.
+- **I5 (médio)**: `plan.md`, `research.md` §1 e o texto da T004/T038 ainda citavam `rank-bm25`, embora o código use BM25 próprio. Artefatos alinhados ao código; o desvio fica justificado no research §1. O usuário confirmou o BM25 próprio como caminho.
+- **Medição**: `rank-bm25` tem 12 KB, mas exige `numpy` (~57 MB instalado: 30 MB do pacote + 27 MB de bibliotecas nativas). Na conversa da Fase 3 eu tinha dito "~20 MB" sem medir; o número estava errado (o DEVLOG não citava tamanho).
+- **U4/I6 (baixos)**: decisões de recuperação (radical de 6 letras, stopwords genéricas, nome do arquivo indexado, `ESCORE_MINIMO`, faixa de valor antes do FAQ) e o uso do top-3 (extrativo usa só o 1º item; os 3 vão ao LLM na T048) registrados no research §1.
+- **F6 (baixo)**: árvore do `plan.md` ganhou `app/texto.py`; "chunking por seção" trocado por "item por documento/FAQ".
+- **A3 (baixo)**: SC-002 restrito a respostas `status=ok`; recusas citam o documento do limite e "não encontrei" vem sem fonte.
+- **F5 (baixo)**: o quickstart dizia "indexa 17 itens" sem log que mostrasse isso. Acrescentado log `índice RAG: N itens (M descartados)` na subida (`app/main.py`), em commit `chore:` separado, a pedido do usuário. Problema: sem configuração de logging, `INFO` do logger `aurora` era descartado; acrescentado `logging.basicConfig(level=INFO)` no mesmo arquivo (fora da proposta inicial). `pytest` 139 passados (local e no contêiner) e a linha confirmada em `docker compose logs app`.

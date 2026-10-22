@@ -207,7 +207,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 ### Measurable Outcomes
 
 - **SC-001**: Nos 12 casos de avaliação, 100% são direcionados ao domínio esperado e 100% das respostas satisfazem o critério de cada caso.
-- **SC-002**: 100% das respostas das perguntas sobre informações internas e ouvidoria citam ao menos uma fonte verificável; 100% das respostas financeiras declaram o critério usado.
+- **SC-002**: 100% das respostas com `status=ok` das perguntas sobre informações internas e ouvidoria citam ao menos uma fonte verificável (recusas e encaminhamentos citam o documento do limite; "não encontrei" vem sem fonte, de propósito — FR-006, FR-009); 100% das respostas financeiras declaram o critério usado.
 - **SC-003**: Os valores financeiros de AV-T006, AV-T007 e AV-T011 coincidem exatamente (centavo) com o cálculo independente sobre os arquivos.
 - **SC-004**: Em protocolos inexistentes, pedidos de credenciais e perguntas fora de escopo, 0 respostas apresentam dado inventado ou credencial.
 - **SC-005**: Um avaliador, em máquina limpa, coloca a aplicação no ar e obtém a primeira resposta em até 15 minutos seguindo apenas o README.
