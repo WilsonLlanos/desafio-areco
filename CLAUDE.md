@@ -1,7 +1,7 @@
 # CLAUDE.md — Desafio Aurora (Orquestrador de Agentes)
 
 Instruções para o agente de IA que trabalha neste repositório. A fonte de verdade dos princípios é
-`.specify/memory/constitution.md` (v1.2.0); este arquivo resume o que importa no dia a dia.
+`.specify/memory/constitution.md` (v1.2.1); este arquivo resume o que importa no dia a dia.
 
 ## Contexto
 

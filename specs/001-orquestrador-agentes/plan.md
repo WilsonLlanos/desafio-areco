@@ -16,7 +16,7 @@ Aplicação web de chat em que um orquestrador classifica a pergunta (financeiro
 
 **Storage**: PostgreSQL 16 (3 tabelas de `data/sql/schema.sql`); índice BM25 em memória reconstruído na subida; log de interações em JSON Lines (volume Docker)
 
-**Testing**: `pytest` com LLM fake injetável, sem rede (lógica); `scripts/evaluate.py` com Gemini real (avaliação AV-T001–AV-T012), fora do pytest
+**Testing**: `pytest` com LLM fake injetável, sem rede (lógica); `scripts/evaluate.py` com Gemini real (avaliação AV-T001–AV-T012), fora do pytest, com juiz complementar opcional (`JUDGE_MODEL`, FR-039)
 
 **Target Platform**: Linux em contêiner, via `docker compose up`
 
@@ -48,6 +48,7 @@ Aplicação web de chat em que um orquestrador classifica a pergunta (financeiro
 
 - *Estruturais*: papel de banco somente leitura; consultas fixas; saída do LLM validada contra schema/enums (valor inválido → esclarecimento); fontes e números escritos por código; guarda determinística **antes** do LLM para credenciais/dados de terceiros (AV-T010); limite de tamanho da pergunta; sem ferramentas de escrita nem acesso a rede além do provedor.
 - *Dados não confiáveis*: trechos recuperados e pergunta vão delimitados como dados na mensagem; resposta de informações internas é conferida (fonte citada ∈ trechos recuperados).
+- *Detecção por padrões (camada complementar)*: `detectar_injecao` (Fase 3) descarta trechos com instrução embutida na indexação; na Fase 4, pergunta com injeção é recusada antes do LLM (FR-029).
 - *Prompt (2ª camada)*: instrução de escopo e de ignorar instruções embutidas.
 - Antes de concluir a Fase 4: smoke test adversarial informal (override, extração de prompt, fabricação, injeção em chunk, multi-turno não se aplica por ser single-turn, ofuscação), reportado como spot-check.
 

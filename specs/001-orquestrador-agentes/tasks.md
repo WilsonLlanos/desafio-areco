@@ -97,12 +97,13 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: cada pergunta devolve o conteúdo-chave do critério e o arquivo-fonte esperado.
 
-- [ ] T038 [US1] `app/rag/index.py`: leitura de `data/informacoes_internas/*.md` e `faq_interno.json`, chunking por seção/documento, metadados `domain`, `source`, `secao`, `document_version`, BM25 com normalização (minúsculas, sem acentos, stopwords PT), top-3 e escore mínimo; incluir `rank-bm25` (versão fixada) no `requirements.txt`
+- [ ] T038 [US1] `app/rag/index.py`: leitura de `data/informacoes_internas/*.md` e `faq_interno.json`, chunking por seção/documento, metadados `domain`, `source`, `secao`, `document_version`, BM25 com normalização (minúsculas, sem acentos, stopwords PT), top-3 e escore mínimo; incluir `rank-bm25` (versão fixada) no `requirements.txt`; criar `detectar_injecao(texto)` em `app/guards.py` (regex sobre texto normalizado — minúsculas, sem acentos — em PT e EN: override "ignore/desconsidere as instruções", extração de prompt "prompt do sistema"/"revele suas instruções", roleplay/jailbreak "você agora é"/"aja como"/"modo desenvolvedor"/"DAN", marcadores de papel `system:`/`<|...|>`) e usá-la na indexação: trecho que casar é registrado em log com aviso e **não é indexado** (injeção indireta, FR-029)
 - [ ] T039 [US1] `app/agents/internal.py`: recupera trechos; sem trecho acima do escore → "não encontrei na base"; resposta extrativa (sem LLM) com valores e prazos copiados do texto; fontes `{arquivo, seção/FAQ-id}` definidas por código (FR-006, FR-008)
 - [ ] T040 [US2] `app/agents/internal.py`: limites dos documentos — não confirmar saldo individual, não consultar holerite, não interpretar caso trabalhista, não revelar dados de terceiros; encaminhar ao RH (FR-007)
 - [ ] T041 [US1] `app/orchestrator.py`: nó `agente_internas`; `RulesLLM` decide internas × fora de escopo pelo escore do BM25
 - [ ] T042 [P] [US1] `tests/test_rag.py`: recuperação do arquivo esperado para AV-T001, AV-T002, AV-T003, AV-T008, AV-T012; conteúdo-chave (30 dias, 10 dias corridos e comprovante, liderança + gerente + diretoria, `seguranca@aurora.example`, reporte imediato sem segredos no chamado); FAQ indexado
 - [ ] T043 [P] [US2] `tests/test_internal_limits.py`: holerite/saldo de férias individual → informa falta de acesso e encaminha ao RH; pergunta sem resposta na base → não inventa
+- [ ] T043a [P] [US2] `tests/test_injecao_rag.py`: `detectar_injecao` casa os padrões (PT/EN, acentos, maiúsculas) e não casa textos legítimos com "instruções"; documento com instrução embutida (diretório de dados temporário) não é indexado, é registrado em log e não altera a resposta; os 10 documentos reais continuam indexados
 - [ ] T044 Gate da Fase 3: `pytest` verde, `docker compose up`, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
 
 ---
@@ -118,10 +119,10 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - [ ] T047 [US1] `app/orchestrator.py`: seleção `GeminiLLM` × `RulesLLM` por `GEMINI_API_KEY`, `modo` na resposta, limiar de confiança 0,6, fallback para regras na classificação quando o provedor falha (FR-034, FR-026)
 - [ ] T048 [US1] `app/agents/internal.py`: redação via `LLMClient.answer` com pergunta e trechos delimitados como dados; descartar a resposta se `fontes_usadas` ⊄ trechos recuperados e usar a versão extrativa
 - [ ] T049 [US2] `app/guards.py`: guarda determinística pré-LLM para credenciais, senhas e dados de terceiros (AV-T010, FR-028) com orientação aos canais de segurança/privacidade citando `04_seguranca_da_informacao.md` e `09_politica_privacidade.md`
-- [ ] T049a [US2] `app/guards.py`: `detectar_injecao(texto)` por regex sobre texto normalizado (minúsculas, sem acentos), em PT e EN — override ("ignore/desconsidere as instruções"), extração de prompt ("prompt do sistema", "revele suas instruções"), roleplay/jailbreak ("você agora é", "aja como", "modo desenvolvedor", "DAN"), marcadores de papel (`system:`, `<|...|>`); `recusa()` devolve mensagem de escopo antes do LLM (nó `guard`, sem mudar o grafo). Na indexação do RAG (T038), chunk que casar é registrado em log com aviso e não é indexado (FR-029). Sem classificador por modelo: decisão no DEVLOG
+- [ ] T049a [US2] `app/guards.py`: `recusa()` **reaproveita** `detectar_injecao` (criada na T038) sobre a pergunta: injeção detectada → recusa com explicação de escopo antes do LLM (nó `guard`, sem mudar o grafo; injeção direta, FR-029); ampliar os padrões se o smoke test (T054) mostrar lacunas. Sem classificador por modelo: decisão no DEVLOG
 - [ ] T050 [US2] `app/orchestrator.py`: ramos de esclarecimento (ambígua/baixa confiança), fora de escopo com explicação dos três domínios (FR-003, FR-004)
 - [ ] T051 [P] [US2] `tests/test_guards.py`: AV-T010 recusa sem chamar o LLM; variações de redação do pedido
-- [ ] T051a [P] [US2] `tests/test_guards.py`: injeção (override PT/EN, extração de prompt, roleplay/DAN, acentos/maiúsculas) → recusa sem chamar o `FakeLLM`; perguntas legítimas com "instruções" (ex.: "quais as instruções para pedir reembolso?") → não recusadas; chunk com instrução embutida não é indexado e não altera a resposta
+- [ ] T051a [P] [US2] `tests/test_guards.py`: injeção (override PT/EN, extração de prompt, roleplay/DAN, acentos/maiúsculas) → recusa sem chamar o `FakeLLM`; perguntas legítimas com "instruções" (ex.: "quais as instruções para pedir reembolso?") → não recusadas
 - [ ] T052 [P] [US2] `tests/test_llm_contracts.py`: com `FakeLLM`, saída malformada, enum inválido, campo extra e fonte fora dos trechos são rejeitados; falha do provedor gera erro claro e log com o mesmo `trace_id`
 - [ ] T053 [P] [US2] `tests/test_routing.py`: ambígua → esclarecimento, fora de escopo → explicação, baixa confiança, modo degradado marcado na resposta
 - [ ] T054 [US2] Smoke test adversarial informal contra a função que fala com o modelo (override de instruções, extração de prompt, fabricação de protocolo/valor, injeção em trecho recuperado, ofuscação/outro idioma): registrar prompts e resultados no DEVLOG como spot-check, não auditoria
@@ -137,7 +138,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 - [ ] T056 [US5] `scripts/evaluate.py`: lê `data/testes/perguntas_avaliacao.json`, chama `POST /ask` com LLM real, verifica domínio (AV-T010 aceita recusa), fonte esperada ∈ fontes e conteúdo-chave por caso; compara AV-T006/T007/T011 ao oráculo; grava `docs/evaluation/avaliacao-<data>.jsonl` (por caso: `trace_id`, esperado × obtido, critério, resultado, latência) e imprime tabela; calcula o p90 da latência e compara com a meta de 10 s (SC-007)
 - [ ] T056a [US5] `scripts/judge.py`: juiz complementar conforme `contracts/judge.md` (Gemini Pro em `JUDGE_MODEL`, mesma `GEMINI_API_KEY`, `response_schema`, temperatura 0, pergunta/resposta delimitadas como dados, referência por caso); integrar ao `evaluate.py` com `juiz_modelo`, `juiz` e `divergente` no log e contagem de divergências no resumo; sem `JUDGE_MODEL` → `nao_executado`; falha → `erro`, sem reprovar o caso; validar o id do modelo e registrar no DEVLOG (FR-039)
-- [ ] T056b [P] [US5] `tests/test_judge.py` com `FakeLLM`: montagem da entrada (referência certa por domínio, delimitação), validação do schema (saída inválida → `erro`), regra de `divergente` nos dois sentidos, `JUDGE_MODEL` ausente → `nao_executado`, falha do juiz não reprova; garantir que nenhum módulo de `app/` importa `scripts.judge`
+- [ ] T056b [US5] `tests/test_judge.py` com `FakeLLM`: montagem da entrada (referência certa por domínio, delimitação), validação do schema (saída inválida → `erro`), regra de `divergente` nos dois sentidos, `JUDGE_MODEL` ausente → `nao_executado`, falha do juiz não reprova; garantir que nenhum módulo de `app/` importa `scripts.judge`
 - [ ] T057 [US5] Executar a avaliação com `GEMINI_API_KEY` real, conferir ausência de segredos no log e versionar o resultado; gerar também o log de amostra das interações em `docs/evaluation/interacoes-amostra.jsonl` sem dados sensíveis
 - [ ] T058 [US5] Analisar falhas da avaliação, ajustar e reexecutar; registrar tentativas e decisões no DEVLOG
 - [ ] T059 [P] [US3] `README.md` final: pré-requisitos, passo a passo, variáveis, subida, testes (`pytest` e avaliação), estrutura do repositório, solução de problemas; seção "Segurança" com as camadas (guarda pré-LLM, detector de injeção, trechos delimitados, consultas fixas com papel `ro`, números e fontes por código), limitações (regex não cobre paráfrases/ofuscação) e "a implementar" (classificador dedicado, ex.: Prompt Guard ou LLM como juiz, e conjunto adversarial maior)
@@ -157,16 +158,16 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5, **cada avanço só com aprovação explícita**.
 - Dentro da Fase 1: T001–T006 → T007–T015 (base) → T016–T025; T018, T022, T023, T024, T025 são paralelizáveis após T012–T015.
 - Fase 2: T027 e T029 em paralelo; T028 depende de T027; T030 de T029; T032 de T028 e T030; testes T033–T036 em paralelo após os agentes.
-- Fase 3: T038 → T039 → T040 → T041; testes em paralelo.
+- Fase 3: T038 → T039 → T040 → T041; testes (T042, T043, T043a) em paralelo.
 - Fase 4: T045 e T049 independentes; T047 depende de T045 e T046; T054 depois de T048–T050.
-- Fase 5: T056 → T056a → T057 → T058 (T056b em paralelo a T056a); documentação T059–T063 em paralelo; T065 e T066 por último.
+- Fase 5: T056 → T056a → T057 → T058 (T056b depois de T056a); documentação T059–T063 em paralelo; T065 e T066 por último.
 
 ## Cobertura das user stories
 
 | Story | Tarefas principais |
 |---|---|
 | US1 | T018–T022, T027–T036, T038–T042, T045–T048 |
-| US2 | T040, T043, T049–T054 |
+| US2 | T040, T043, T043a, T049–T054 (inclui T049a, T051a) |
 | US3 | T003–T005, T009, T016, T017, T059, T066 |
 | US4 | T011, T021, T023, T063 |
 | US5 | T056, T056a, T056b, T057, T058 |

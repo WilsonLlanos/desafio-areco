@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.1 → 1.2.0 (MINOR: princípio IV passa a permitir LangGraph como orquestrador de agentes)
-- Histórico: 1.1.0 → 1.1.1 (PATCH: documentos referem os casos de avaliação como AV-Txxx; data/ intocado); 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
+- Version change: 1.2.0 → 1.2.1 (PATCH: princípio V esclarece "sem rede" = sem rede externa nem LLM real; PostgreSQL local/do compose é permitido)
+- Histórico: 1.1.1 → 1.2.0 (MINOR: princípio IV passa a permitir LangGraph como orquestrador de agentes); 1.1.0 → 1.1.1 (PATCH: documentos referem os casos de avaliação como AV-Txxx; data/ intocado); 1.0.0 → 1.1.0 (MINOR: princípios V e VI expandidos)
   (1.0.0 foi a versão inicial, a partir do template não preenchido)
 - Princípios adicionados: I. Rastreabilidade; II. Consultas parametrizadas, nunca SQL do modelo;
   III. Docker Compose como único meio de execução; IV. Simplicidade; V. Testes (pytest com LLM mockada + script de avaliação com LLM real);
@@ -46,7 +46,7 @@ DEVLOG. O código MUST ser explicável pelo autor.
 ### V. Testes: pytest com LLM mockada e avaliação com LLM real
 Os testes são de duas naturezas distintas e MUST NOT ser misturados:
 - **Testes `pytest` (lógica):** MUST usar LLM mockada/fake (cliente injetável) e MUST NOT acessar
-  rede nem LLM real. Cobrem roteamento, extração de parâmetros, consultas parametrizadas, RAG, tratamento
+  rede externa nem LLM real (o PostgreSQL local ou do Docker Compose é permitido). Cobrem roteamento, extração de parâmetros, consultas parametrizadas, RAG, tratamento
   de erros e logging. Resultados financeiros MUST ser conferidos por cálculo independente sobre os CSV.
   Rodam em todo gate de fase.
 - **Script de avaliação (LLM real):** um script separado, fora do `pytest`, MUST executar os casos
@@ -114,4 +114,4 @@ MAJOR para remoção ou redefinição incompatível de princípios; MINOR para n
 material; PATCH para esclarecimentos. A conformidade é verificada no gate de cada fase e na etapa de
 plano (Constitution Check). Orientação de uso diário: `CLAUDE.md` e `docs/DEVLOG.md`.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21
+**Version**: 1.2.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21

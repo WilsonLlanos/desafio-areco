@@ -21,6 +21,7 @@
 - Q: Execução orçamentária sem critério de despesa? → A: Despesas pagas, pois o indicador é "despesas realizadas ÷ orçamento"; declarado na resposta (FR-037; decisão da IA na Fase 2, aprovada após `/speckit-analyze`).
 - Q: Inadimplência em valor ou em quantidade? → A: Em valor, declarado na resposta (FR-038; idem).
 - Q: Usar um juiz LLM na avaliação? → A: Sim, Gemini Pro (`JUDGE_MODEL`), complementar e só no script de avaliação; o determinístico decide (FR-039).
+- Q: O que fazer quando um prompt injection é detectado? → A: Na pergunta, recusa com explicação de escopo antes do LLM; em trecho de documento, o trecho não é indexado. A regex é camada complementar às defesas estruturais (FR-029).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -165,7 +166,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 
 **Segurança**
 - **FR-028**: Pedidos de credenciais, senhas ou dados de outras pessoas MUST ser recusados com orientação ao canal autorizado.
-- **FR-029**: Pergunta do usuário e conteúdo recuperado MUST ser tratados como não confiáveis; instruções embutidas neles MUST NOT alterar o comportamento do sistema.
+- **FR-029**: Pergunta do usuário e conteúdo recuperado MUST ser tratados como não confiáveis; instruções embutidas neles MUST NOT alterar o comportamento do sistema. Pergunta com padrão de prompt injection detectado MUST ser recusada com explicação de escopo, antes de qualquer chamada ao LLM; trecho de documento com esse padrão MUST NOT ser indexado. A detecção por padrões é camada complementar: a proteção principal são as defesas estruturais (papel de banco somente leitura, consultas fixas, fontes e números escritos por código, validação das fontes citadas).
 - **FR-030**: Nenhum segredo (chaves, tokens) MUST ser armazenado no repositório; a configuração sensível vem de variáveis de ambiente, com arquivo de exemplo sem valores reais.
 
 **Avaliação e entrega**

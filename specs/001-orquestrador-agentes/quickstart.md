@@ -34,6 +34,7 @@ Esperado: `db` saudável; `app` aplica o schema, carrega as bases (300 lançamen
 docker compose run --rm app pytest          # lógica, LLM fake, sem rede
 docker compose run --rm app python scripts/evaluate.py   # LLM real; requer GEMINI_API_KEY
 ```
+Com `JUDGE_MODEL` preenchido, a avaliação também registra a nota do juiz complementar e as divergências (`contracts/judge.md`); vazio, roda sem juiz.
 Esperado: `pytest` verde; avaliação gera `docs/evaluation/avaliacao-<data>.jsonl` (e um log de amostra das interações) com 12 casos (AV-T001–AV-T012), e AV-T006/T007/T011 batem com o cálculo independente sobre os CSV.
 
 ## Gate de fase

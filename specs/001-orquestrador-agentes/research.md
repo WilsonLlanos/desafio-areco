@@ -44,6 +44,7 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 - Papel Postgres `aurora_ro` com `SELECT` apenas; a API usa só ele. Ingestão usa o papel dono.
 - Guarda pré-LLM (`guards.py`): padrões de credenciais/senhas/dados de terceiros, pedidos de holerite/saldo individual → recusa/encaminhamento (AV-T010, FR-007, FR-028). Entrada vazia, só símbolos ou > 1.000 caracteres → rejeitada (FR-027).
 - Chunks e pergunta enviados como dados delimitados; fontes não vêm do texto do modelo; resposta de internas descartada se citar fonte fora dos trechos.
+- **Detecção de prompt injection por padrões** (`guards.detectar_injecao`, regex PT/EN sobre texto normalizado): criada na Fase 3 (T038) para a **injeção indireta** — trecho de documento que casar é registrado e não é indexado — e reaproveitada na Fase 4 (T049a) para a **injeção direta** — pergunta que casar é recusada com explicação de escopo antes do LLM (FR-029). É uma camada **complementar e contornável** (ofuscação, outros idiomas, base64); não substitui as defesas estruturais acima. No corpus atual o risco indireto é baixo (documentos fixos e imutáveis, FR-023); o filtro existe para tratar conteúdo recuperado como não confiável (constituição VIII).
 - Smoke test adversarial informal na Fase 4; reportar como spot-check, não auditoria.
 
 ## 8. Ingestão idempotente

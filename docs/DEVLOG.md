@@ -165,3 +165,10 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Mitigação do viés**: referência explícita por caso, rubrica fixa, temperatura 0, decisão final determinística.
 - Artefatos: FR-039 e Clarifications na spec, `research.md` §12, `contracts/judge.md` (novo), `data-model.md`, `plan.md`, T056a/T056b (e T061/T062) em `tasks.md`, `JUDGE_MODEL` no `.env.example`. Nenhum código alterado.
 
+### 2026-10-21 — `/speckit-analyze` (2ª execução) e correções
+- Resultado: nenhum crítico ou alto; 2 médios, 3 baixos; cobertura de FR e SC 100%.
+- **Dúvida do usuário**: "a instrução embutida seria o prompt injection?" Sim, na variante **indireta** (instrução escondida no conteúdo recuperado pelo RAG); a direta vem na própria pergunta. No corpus atual o risco indireto é baixo (documentos fixos e imutáveis), mas a constituição VIII manda tratar conteúdo recuperado como não confiável.
+- **I4 (médio)**: o filtro de injeção na indexação estava na T049a (Fase 4), mas o índice nasce na T038 (Fase 3). **Decisão do usuário**: `detectar_injecao` é criada na T038 e usada na indexação; a T049a a reaproveita para a pergunta. Teste do filtro de indexação movido da T051a para a nova T043a.
+- **U2 (médio)**: spec e plano não diziam o que fazer ao detectar injeção. **Decisão do usuário**: detecção na pergunta → **recusa** com explicação de escopo antes do LLM; trecho de documento → não indexado (FR-029, Clarifications, `research.md` §7, `plan.md`). Documentado que a regex é camada complementar e contornável; a proteção principal é estrutural.
+- **Baixos**: T056b deixa de ser `[P]` (depende da T056a); juiz citado no `plan.md` e no `quickstart.md`; **emenda 1.2.1 da constituição** (PATCH, princípio V): "sem rede" passa a ser "sem rede externa nem LLM real", com PostgreSQL local/do compose permitido.
+
