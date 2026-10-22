@@ -143,5 +143,18 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **O que funciona (verificado)**: AV-T005 (lista exatamente os 5 status do JSON); AV-T006 (R$ 305.937,01, 27 lançamentos), AV-T007 (Tecnologia, R$ 43.229,05) e AV-T011 (R$ 275.727,70) iguais ao oráculo independente, centavo a centavo; contagens e listas de ouvidoria iguais ao oráculo; listas limitadas a 10 com o total; período ausente pede esclarecimento; perguntas que cruzam domínios pedem esclarecimento.
 - **Testes**: `pytest` 81 passados no contêiner e com PostgreSQL local, sem rede; `ruff` (erros e imports não usados) limpo. Perguntas reais por HTTP no Docker conferidas.
 - **Limitações**: a extração de parâmetros por regras é simples (categoria de lançamento não é extraída; comparação só entre dois anos; períodos relativos como "mês passado" não são entendidos); sem LLM, perguntas fora desses padrões caem em esclarecimento. AV-T001–T003, T008 e T012 (informações internas) e AV-T010 (recusa) ficam para as Fases 3 e 4.
-- **Pendências**: commit da fase e aprovação para a Fase 3.
+- **Pendências**: aprovação para a Fase 3 (commit feito: `6fe999e`).
+
+---
+
+## Entre as Fases 2 e 3 — `/speckit-analyze` e correções
+
+### 2026-10-21 — Análise de consistência
+- `/speckit-analyze` (só leitura, já com Opus 5.5): 1 crítico, 1 alto, 4 médios e 9 baixos; cobertura dos FR 100%.
+- **Crítico (C1), desvio de processo meu**: nas Fases 1 e 2 as notas do DEVLOG foram escritas em bloco no fim de cada fase, e as tarefas marcadas `[X]` também em bloco. O princípio VI pede uma nota a cada tarefa, durante o desenvolvimento. As notas passadas **não** foram reescritas para parecer contínuas. **Correção a partir da Fase 3**: nota no DEVLOG logo após cada tarefa, antes do `[X]`.
+- **Alto (I1)**: `contracts/llm-schemas.md` e `data-model.md` não tinham os parâmetros que o código já aceita (`receita_liquida`, comparação, `ordem`, `referencia_tipo`); o schema do Gemini (T045) sairia incompleto. Atualizados.
+- **Médios**: seção "Decisões em aberto" da spec desatualizada → substituída (T064 concluída); decisões de execução orçamentária (pagas) e inadimplência (valor) só existiam no DEVLOG → viraram FR-037 e FR-038; SC-007 sem medição → T056 calcula o p90; exportação de conversas por fase não feita → **decisão**: exportação única na T065, porque a sessão atravessa várias fases (CLAUDE.md, `docs/conversas/README.md` e `tasks.md` ajustados).
+- **Baixos aplicados**: T004 anota o desvio de dependências; T038/T045 incluem as dependências adiadas; `quickstart.md` cita `APP_PORT`; árvore do `plan.md` com `periodo.py` e `agents/base.py`; T062 cita a pergunta no log como limitação; T067 roda o `pytest` 3 vezes (SC-008); spec com Clarifications depois do cabeçalho e status "Clarified".
+- **Não aplicado (A1)**: a constituição V diz "pytest sem rede", e os testes usam o PostgreSQL pela rede interna do Docker. A intenção (sem LLM nem serviços externos) é cumprida; esclarecer o texto exige emenda PATCH, fica como sugestão.
+- **Observação**: as tarefas T049a e T051a (detecção de prompt injection por regex) foram adicionadas ao `tasks.md` fora desta sessão e entraram no commit da Fase 2 junto com o arquivo.
 

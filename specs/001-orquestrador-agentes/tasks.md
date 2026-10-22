@@ -15,7 +15,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 ## Regras transversais (constituição)
 
-- **Toda tarefa**, ao concluir, recebe uma nota curta em `docs/DEVLOG.md` (o que foi feito, decisão/problema, sugestão de IA aceita/modificada/descartada, teste executado) (VI). Ao fim de cada fase, exportar as sessões da fase para `docs/conversas/` e atualizar o README dessa pasta.
+- **Toda tarefa**, ao concluir, recebe uma nota curta em `docs/DEVLOG.md` (o que foi feito, decisão/problema, sugestão de IA aceita/modificada/descartada, teste executado) (VI). O histórico das conversas é exportado uma única vez, na T065: a sessão do Claude Code atravessa várias fases, e exportar por fase geraria cópias parciais da mesma conversa (decisão após `/speckit-analyze`, 2026-10-21).
 - **Pré-fase concluída**: `CLAUDE.md`, `docs/DEVLOG.md` (histórico retroativo) e `docs/conversas/README.md` já existem; T001, T002 e T065 não os recriam.
 - **Cada fase** termina com tarefa de **gate**: `docker compose up` funcional, `pytest` verde, resumo da fase no DEVLOG, nenhum segredo no diff, **um commit** e **parada para aprovação explícita** antes da fase seguinte (IX).
 - `data/` nunca é alterado. CSVs lidos com `utf-8-sig`. Valores monetários sempre `Decimal`.
@@ -33,7 +33,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - [X] T001 `CLAUDE.md` na raiz com a regra de registro contínuo no DEVLOG e de guarda das conversas em `docs/conversas/` — **já criado antes da Fase 1** (pré-fase); na Fase 1, apenas revisar o arquivo e atualizá-lo se o fluxo mudar
 - [X] T002 [P] `docs/DEVLOG.md` com formato de nota/resumo e o histórico retroativo da pré-fase (inclui a emenda 1.2.0) — **já criado antes da Fase 1**; na Fase 1, apenas acrescentar as notas das tarefas e o resumo da fase
 - [X] T003 [P] Criar `.gitignore` (inclui `.env`, `logs/`, `__pycache__/`, `.pytest_cache/`) e `.env.example` sem valores reais (`GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.1-flash-lite`, `CONFIDENCE_THRESHOLD=0.6`, `POSTGRES_*`, `DB_RO_PASSWORD`, `LOG_DIR`)
-- [X] T004 [P] Criar `requirements.txt` (fastapi, uvicorn, pydantic, psycopg[binary], rank-bm25, langgraph, google-genai, pytest, httpx) com versões fixadas
+- [X] T004 [P] Criar `requirements.txt` (fastapi, uvicorn, pydantic, psycopg[binary], rank-bm25, langgraph, google-genai, pytest, httpx) com versões fixadas — **desvio**: `rank-bm25` e `google-genai` adiados para T038 e T045 (YAGNI; ver DEVLOG)
 - [X] T005 Criar `Dockerfile` (Python 3.12, usuário não-root) e `docker-compose.yml` (`db` PostgreSQL 16 com healthcheck; `app` depende de `db`; `data/` montado somente leitura; volume `logs/`)
 - [X] T006 Criar estrutura de pacotes `app/`, `app/api/`, `app/llm/`, `app/agents/`, `app/rag/`, `app/queries/`, `tests/`, `frontend/`, `scripts/` com `__init__.py`
 
@@ -97,7 +97,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: cada pergunta devolve o conteúdo-chave do critério e o arquivo-fonte esperado.
 
-- [ ] T038 [US1] `app/rag/index.py`: leitura de `data/informacoes_internas/*.md` e `faq_interno.json`, chunking por seção/documento, metadados `domain`, `source`, `secao`, `document_version`, BM25 com normalização (minúsculas, sem acentos, stopwords PT), top-3 e escore mínimo
+- [ ] T038 [US1] `app/rag/index.py`: leitura de `data/informacoes_internas/*.md` e `faq_interno.json`, chunking por seção/documento, metadados `domain`, `source`, `secao`, `document_version`, BM25 com normalização (minúsculas, sem acentos, stopwords PT), top-3 e escore mínimo; incluir `rank-bm25` (versão fixada) no `requirements.txt`
 - [ ] T039 [US1] `app/agents/internal.py`: recupera trechos; sem trecho acima do escore → "não encontrei na base"; resposta extrativa (sem LLM) com valores e prazos copiados do texto; fontes `{arquivo, seção/FAQ-id}` definidas por código (FR-006, FR-008)
 - [ ] T040 [US2] `app/agents/internal.py`: limites dos documentos — não confirmar saldo individual, não consultar holerite, não interpretar caso trabalhista, não revelar dados de terceiros; encaminhar ao RH (FR-007)
 - [ ] T041 [US1] `app/orchestrator.py`: nó `agente_internas`; `RulesLLM` decide internas × fora de escopo pelo escore do BM25
@@ -113,7 +113,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: pedido de senha é recusado antes do LLM; saída inválida do modelo vira esclarecimento; sem chave a API segue em modo degradado.
 
-- [ ] T045 [US1] `app/llm/gemini.py`: cliente `google-genai` com `GEMINI_MODEL=gemini-3.1-flash-lite`, saída estruturada (`response_schema`) para classificação e parâmetros, timeout de 8 s; validar o id do modelo e o suporte a saída estruturada, registrando o resultado no DEVLOG
+- [ ] T045 [US1] `app/llm/gemini.py`: cliente `google-genai` com `GEMINI_MODEL=gemini-3.1-flash-lite`, saída estruturada (`response_schema`) para classificação e parâmetros, timeout de 8 s; validar o id do modelo e o suporte a saída estruturada, registrando o resultado no DEVLOG; incluir `google-genai` (versão fixada) no `requirements.txt`; o `response_schema` segue `contracts/llm-schemas.md` (inclui `receita_liquida`, comparação, `ordem` e `referencia_tipo`)
 - [ ] T046 [US1] Validação Pydantic das saídas do LLM conforme `contracts/llm-schemas.md`; valor fora de enum/formato → parâmetro ausente → esclarecimento
 - [ ] T047 [US1] `app/orchestrator.py`: seleção `GeminiLLM` × `RulesLLM` por `GEMINI_API_KEY`, `modo` na resposta, limiar de confiança 0,6, fallback para regras na classificação quando o provedor falha (FR-034, FR-026)
 - [ ] T048 [US1] `app/agents/internal.py`: redação via `LLMClient.answer` com pergunta e trechos delimitados como dados; descartar a resposta se `fontes_usadas` ⊄ trechos recuperados e usar a versão extrativa
@@ -135,18 +135,18 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: `scripts/evaluate.py` gera o log com 12 linhas; um clone limpo sobe seguindo só o README.
 
-- [ ] T056 [US5] `scripts/evaluate.py`: lê `data/testes/perguntas_avaliacao.json`, chama `POST /ask` com LLM real, verifica domínio (AV-T010 aceita recusa), fonte esperada ∈ fontes e conteúdo-chave por caso; compara AV-T006/T007/T011 ao oráculo; grava `docs/evaluation/avaliacao-<data>.jsonl` (por caso: `trace_id`, esperado × obtido, critério, resultado, latência) e imprime tabela
+- [ ] T056 [US5] `scripts/evaluate.py`: lê `data/testes/perguntas_avaliacao.json`, chama `POST /ask` com LLM real, verifica domínio (AV-T010 aceita recusa), fonte esperada ∈ fontes e conteúdo-chave por caso; compara AV-T006/T007/T011 ao oráculo; grava `docs/evaluation/avaliacao-<data>.jsonl` (por caso: `trace_id`, esperado × obtido, critério, resultado, latência) e imprime tabela; calcula o p90 da latência e compara com a meta de 10 s (SC-007)
 - [ ] T057 [US5] Executar a avaliação com `GEMINI_API_KEY` real, conferir ausência de segredos no log e versionar o resultado; gerar também o log de amostra das interações em `docs/evaluation/interacoes-amostra.jsonl` sem dados sensíveis
 - [ ] T058 [US5] Analisar falhas da avaliação, ajustar e reexecutar; registrar tentativas e decisões no DEVLOG
 - [ ] T059 [P] [US3] `README.md` final: pré-requisitos, passo a passo, variáveis, subida, testes (`pytest` e avaliação), estrutura do repositório, solução de problemas; seção "Segurança" com as camadas (guarda pré-LLM, detector de injeção, trechos delimitados, consultas fixas com papel `ro`, números e fontes por código), limitações (regex não cobre paráfrases/ofuscação) e "a implementar" (classificador dedicado, ex.: Prompt Guard ou LLM como juiz, e conjunto adversarial maior)
 - [ ] T060 [P] `docs/arquitetura.md`: visão geral, diagrama do grafo LangGraph (`draw_mermaid`), fluxo de dados, papéis de banco, rastreabilidade
 - [ ] T061 [P] `docs/decisoes.md`: decisões do briefing §8 e do clarify (LangGraph, BM25, Gemini, esclarecimento multi-domínio, incorrida, formato de fontes), alternativas descartadas
-- [ ] T062 [P] `docs/limitacoes.md`: limitações conhecidas e **pendências**: o que ficou pendente, o que foi tentado e por que não funcionou, como concluir, o que faria diferente
+- [ ] T062 [P] `docs/limitacoes.md`: limitações conhecidas e **pendências**: o que ficou pendente, o que foi tentado e por que não funcionou, como concluir, o que faria diferente; inclui que o log grava a pergunta como digitada (exigência da constituição I), então dado pessoal digitado pelo usuário vai para o log
 - [ ] T063 [P] [US4] Documentar em `docs/arquitetura.md` como consultar logs (`/traces/{id}` e `logs/interactions.jsonl`) e a política de dados nos logs
-- [ ] T064 Atualizar a seção "Decisões em aberto" de `specs/001-orquestrador-agentes/spec.md` com as decisões tomadas e corrigir a numeração/estado nos documentos
+- [X] T064 Atualizar a seção "Decisões em aberto" de `specs/001-orquestrador-agentes/spec.md` com as decisões tomadas e corrigir a numeração/estado nos documentos — **feito após `/speckit-analyze`** (seção substituída por "Decisões da seção 8 do briefing")
 - [ ] T065 Exportar o histórico das conversas para `docs/conversas/` conforme a tabela de `docs/conversas/README.md` (README já criado na pré-fase; alternativa documentada se a exportação for parcial), removendo chaves, tokens, credenciais e e-mail, e revisar a sanitização; atualizar a coluna "Exportado"
 - [ ] T066 Verificação final em clone limpo: seguir só o README, medir o tempo até a primeira resposta (meta SC-005 ≤ 15 min), rodar `quickstart.md` completo, revisar o diff por segredos
-- [ ] T067 Gate da Fase 5: `pytest` verde, DEVLOG com resumo final, **commit** e **aguardar aprovação**
+- [ ] T067 Gate da Fase 5: `pytest` verde, DEVLOG com resumo final, **commit** e **aguardar aprovação**; rodar `pytest` 3 vezes seguidas no contêiner, todas verdes (SC-008)
 
 ---
 

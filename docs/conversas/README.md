@@ -4,6 +4,9 @@ Pasta de entrega do histórico das conversas com as ferramentas de IA (item 8 do
 usada até aqui: **Claude Code** (CLI). As sessões são gravadas localmente em JSONL em
 `~/.claude/projects/-home-wilso-projetos-desafio-areco/`; as exportações abaixo saem dessas sessões.
 
+**Quando**: a exportação é feita uma única vez, no fim do projeto (tarefa T065), porque uma mesma
+sessão atravessa várias fases. Até lá, as transcrições JSONL locais não devem ser apagadas.
+
 **Estado atual**: nenhuma exportação foi versionada ainda. A tabela lista as sessões existentes e
 o destino previsto de cada uma. Conforme cada exportação for adicionada, atualizar a coluna "Exportado".
 

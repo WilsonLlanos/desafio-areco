@@ -11,6 +11,8 @@ Guia de validação; os detalhes de contrato estão em [contracts/](contracts/) 
 cp .env.example .env          # preencher GEMINI_API_KEY (opcional)
 docker compose up --build
 ```
+Se a porta 8000 estiver ocupada, defina `APP_PORT` no `.env` e use essa porta nos exemplos abaixo.
+
 Esperado: `db` saudável; `app` aplica o schema, carrega as bases (300 lançamentos, 144 orçamentos, 180 manifestações), indexa 17 itens e escuta em `http://localhost:8000`. Sem chave, `GET /health` devolve `"modo": "degradado"`.
 
 ## Cenários

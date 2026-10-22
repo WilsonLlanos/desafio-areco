@@ -28,8 +28,8 @@ Validações de ingestão: datas ISO; `valor_brl` → `Decimal`; enums; linha in
 
 ## Parâmetros extraídos (validados antes de usar)
 
-- **ParamsFinanceiro**: `consulta` (enum do catálogo), `ano`, `mes_inicio`, `mes_fim`, `tipo_data` (padrão `competencia`), `criterio_gasto` (padrão `incorrida`), `departamento?`, `centro_custo?` (`CCnnn`), `categoria?`.
-- **ParamsOuvidoria**: `consulta` (enum), `protocolo?` (`OUV-NNNN`), `status?`, `categoria?`, `prioridade?`, `canal?`, `data_de?`, `data_ate?`.
+- **ParamsFinanceiro** (`app/queries/financeiro.py`, `extra="forbid"`): `consulta` (enum do catálogo, inclui `receita_liquida`), `ano`, `mes_inicio`, `mes_fim`, `tipo_data` (padrão `competencia`), `criterio_gasto` (padrão `incorrida`; `paga` na execução orçamentária), `departamento?`, `centro_custo?` (`CC[1-6]00`), `categoria?`, `metrica?`, `ano_b?`, `mes_inicio_b?`, `mes_fim_b?` (comparação), `ordem?` (maior/menor).
+- **ParamsOuvidoria**: `consulta` (`buscar_protocolo` | `contar` | `listar` | `referencia`), `protocolo?` (`OUV-NNNN`), `status?`, `categoria?`, `prioridade?`, `canal?`, `data_de?`, `data_ate?` (ISO, exclusivo), `referencia_tipo?`.
 - Valor fora do enum/formato → tratado como parâmetro ausente → esclarecimento.
 
 ## Registro de interação (JSONL, um objeto por requisição)

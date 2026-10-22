@@ -33,7 +33,9 @@ O desafio avalia **como o desenvolvimento é conduzido com IA**, não só o resu
 As sessões do Claude Code ficam em `~/.claude/projects/-home-wilso-projetos-desafio-areco/`
 (JSONL). As exportações entregáveis vão para `docs/conversas/`, descritas no README dessa pasta
 (origem de cada arquivo). Sanitizar antes de versionar: chaves de API, tokens, credenciais e
-dados pessoais (inclusive e-mail do usuário). Ao fim de cada fase, exportar a(s) sessão(ões) da fase.
+dados pessoais (inclusive e-mail do usuário). A exportação é feita uma vez, no fim do projeto
+(T065), porque uma mesma sessão atravessa várias fases; até lá, as transcrições JSONL locais são a
+fonte e não devem ser apagadas.
 
 ## Regras de trabalho
 

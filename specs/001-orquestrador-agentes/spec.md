@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-20
 
-**Status**: Draft
+**Status**: Clarified
+
+**Input**: User description: "Use o briefing.md como entrada. Mantenha as decisões em aberto da seção 8. Vamos resolver no clarify" (fonte: `docs/briefing.md`)
 
 ## Clarifications
 
@@ -16,8 +18,8 @@
 - Q: Pergunta financeira sem período? → A: Pedir o período (FR-035).
 - Q: "Receita líquida" sem deduções na base? → A: Total de receitas, declarando que não há deduções registradas (FR-036).
 - Q: Tamanho máximo de listas? → A: 10 itens mais o total (FR-010).
-
-**Input**: User description: "Use o briefing.md como entrada. Mantenha as decisões em aberto da seção 8. Vamos resolver no clarify" (fonte: `docs/briefing.md`)
+- Q: Execução orçamentária sem critério de despesa? → A: Despesas pagas, pois o indicador é "despesas realizadas ÷ orçamento"; declarado na resposta (FR-037; decisão da IA na Fase 2, aprovada após `/speckit-analyze`).
+- Q: Inadimplência em valor ou em quantidade? → A: Em valor, declarado na resposta (FR-038; idem).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -172,6 +174,8 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-034**: O provedor de LLM padrão MUST ser o Google Gemini. Sem chave configurada, o sistema MUST operar em modo degradado, roteando por regras/palavras-chave e avisando a degradação ao usuário.
 - **FR-035**: Quando uma pergunta financeira não informar o período, o sistema MUST pedir esclarecimento sobre o período, sem assumir intervalo.
 - **FR-036**: Para "receita líquida", como a base não contém deduções registradas, o sistema MUST responder com o total das receitas e declarar que não há deduções registradas (líquida igual à soma das receitas).
+- **FR-037**: A execução orçamentária MUST usar despesas pagas quando a pergunta não especificar o critério, porque o indicador é definido como "despesas realizadas ÷ orçamento aprovado do mesmo período e centro de custo"; a resposta MUST declarar o critério.
+- **FR-038**: A inadimplência de recebíveis MUST ser calculada em valor (receitas com status Atrasado ÷ total de receitas do período), declarando o critério na resposta.
 
 ### Key Entities
 
@@ -186,16 +190,14 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **Documento interno**: política ou procedimento com versão, seções e limites de resposta; **item de FAQ** relacionado a um documento.
 - **Caso de avaliação**: pergunta, domínio esperado, fonte esperada e critério (AV-T001–AV-T012).
 
-## Decisões em aberto *(mantidas da seção 8 do briefing, para o `/speckit.clarify`)*
+## Decisões da seção 8 do briefing *(todas resolvidas)*
 
-Mantidas intencionalmente sem resolução, conforme pedido. As decisões 1, 4 e 5 também aparecem como marcadores em FR-034, FR-005 e FR-017.
-
-1. **Provedor de LLM e chave:** qual provedor padrão; modo de degradação sem chave (ex.: roteamento por regras).
-2. **Estratégia de recuperação para documentos internos:** vetorial dentro do mesmo banco vs. índice em memória/BM25 etc. (corpus de ~17 itens).
-3. **Framework de agentes:** ~~biblioteca existente vs. implementação própria~~ → decidido: LangGraph (ver `research.md`).
-4. **Perguntas que cruzam domínios:** um domínio principal, pedido de esclarecimento ou resposta combinada.
-5. **Interpretação padrão de "gasto"** sem critério explícito: paga ou incorrida.
-6. **Formato das fontes** na resposta: nome do arquivo, ID de lançamento/protocolo, consulta aplicada.
+1. **Provedor de LLM e chave:** Google Gemini (`gemini-3.1-flash-lite`); sem chave, roteamento por regras com aviso (FR-034; Clarifications).
+2. **Recuperação para documentos internos:** BM25 em memória (`research.md` §1).
+3. **Framework de agentes:** LangGraph, só para o grafo de orquestração (`research.md` §2; constituição 1.2.0).
+4. **Perguntas que cruzam domínios:** pedido de esclarecimento, sem combinar agentes (FR-005).
+5. **Interpretação padrão de "gasto":** despesa incorrida, sempre declarada (FR-017).
+6. **Formato das fontes:** `{tipo, ref, detalhe}` com arquivo, protocolo, lançamento ou consulta (`research.md` §3).
 
 ## Success Criteria *(mandatory)*
 

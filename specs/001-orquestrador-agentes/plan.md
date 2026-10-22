@@ -83,12 +83,14 @@ app/
 │   ├── gemini.py        # implementação Gemini
 │   └── rules.py         # roteamento/extração por regras (degradação sem chave)
 ├── agents/
+│   ├── base.py          # Resultado, formatação em reais e percentuais
 │   ├── internal.py      # RAG
 │   ├── ouvidoria.py
 │   └── financeiro.py
 ├── rag/index.py         # chunking por seção + BM25 + metadados
 ├── queries/             # consultas parametrizadas (ouvidoria.py, financeiro.py)
 ├── db.py                # conexão (papel ro) e helpers
+├── periodo.py           # períodos em português → intervalos de datas
 ├── ingestion.py         # CSV→Postgres idempotente, papel ro, valida enums
 └── tracing.py           # contextvar trace_id, logger JSON, gravação JSONL
 frontend/                # index.html, style.css, app.js
