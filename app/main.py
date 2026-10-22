@@ -17,12 +17,14 @@ from app.llm.rules import RulesLLM
 from app.orchestrator import montar_grafo
 from app.rag.index import Indice
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s - %(message)s")
 log = logging.getLogger("aurora")
 
 
 def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -> FastAPI:
     settings = settings or load_settings()
     indice = Indice(settings.data_dir)
+    log.info("índice RAG: %d itens (%d descartados)", len(indice.itens), len(indice.descartados))
     llm = llm or RulesLLM(settings.data_dir, indice)  # provedor real entra na Fase 4
     app = FastAPI(title="Orquestrador Aurora", version="0.1.0")
 
