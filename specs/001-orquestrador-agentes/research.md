@@ -35,7 +35,7 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 ## 6. Consultas parametrizadas (financeiro e ouvidoria)
 - **Catálogo fixo** com parâmetros tipados (Pydantic): período (`ano`, `mes`, intervalo), `tipo_data` (`competencia`|`vencimento`, padrão competência), `criterio_gasto` (`paga`|`incorrida`, padrão **incorrida**), `status`, `departamento`, `centro_custo` (CC100–CC600), `categoria`, `prioridade`, `canal`, `protocolo` (`^OUV-\d{4}$`, normalizado para maiúsculas).
 - Financeiro: `soma_despesas`, `soma_receitas`, `comparar_periodos`, `orcamento_por_departamento` (maior/menor), `execucao_orcamentaria`, `inadimplencia`. Ouvidoria: `buscar_protocolo`, `listar/contar` com filtros, `referencia` (enums de `referencia_ouvidoria.json`).
-- **Período ausente** em pergunta financeira → esclarecimento (FR-035). **`receita_liquida`**: soma das receitas, declarando que não há deduções registradas (FR-036). **Listas** (ouvidoria): até 10 itens mais o total (FR-010).
+- **Período ausente** em pergunta financeira → esclarecimento (FR-035). **`receita_liquida`**: soma das receitas, declarando que não há deduções registradas (FR-036). **Listas** (ouvidoria): até 10 itens mais o total (FR-010). **Execução orçamentária**: despesas pagas por padrão, pois o indicador é "despesas realizadas ÷ orçamento" (FR-037). **Inadimplência**: em valor (FR-038). **Comparação**: dois períodos, métrica receitas ou despesas. **Orçamento por departamento**: ranking com `ordem` maior/menor e empates.
 - SQL com `%s`/`NUMERIC`, nomes de coluna vindos de whitelist no código. Resposta renderizada por **template em código** com critério declarado; o LLM não vê nem escreve números.
 - Parâmetro ausente que muda o resultado (ex.: período) → esclarecimento; "gasto" sem critério → incorrida, declarado (FR-017).
 - Ano fora de 2025–2026 ou sem lançamentos → resposta explícita "sem dados no período".
@@ -44,6 +44,7 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 - Papel Postgres `aurora_ro` com `SELECT` apenas; a API usa só ele. Ingestão usa o papel dono.
 - Guarda pré-LLM (`guards.py`): padrões de credenciais/senhas/dados de terceiros, pedidos de holerite/saldo individual → recusa/encaminhamento (AV-T010, FR-007, FR-028). Entrada vazia, só símbolos ou > 1.000 caracteres → rejeitada (FR-027).
 - Chunks e pergunta enviados como dados delimitados; fontes não vêm do texto do modelo; resposta de internas descartada se citar fonte fora dos trechos.
+- **Detecção de prompt injection por padrões** (`guards.detectar_injecao`, regex PT/EN sobre texto normalizado): criada na Fase 3 (T038) para a **injeção indireta** — trecho de documento que casar é registrado e não é indexado — e reaproveitada na Fase 4 (T049a) para a **injeção direta** — pergunta que casar é recusada com explicação de escopo antes do LLM (FR-029). É uma camada **complementar e contornável** (ofuscação, outros idiomas, base64); não substitui as defesas estruturais acima. No corpus atual o risco indireto é baixo (documentos fixos e imutáveis, FR-023); o filtro existe para tratar conteúdo recuperado como não confiável (constituição VIII).
 - Smoke test adversarial informal na Fase 4; reportar como spot-check, não auditoria.
 
 ## 8. Ingestão idempotente
@@ -57,3 +58,11 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 
 ## 11. Avaliação
 - `scripts/evaluate.py`: lê `perguntas_avaliacao.json`, chama `POST /ask` (ou o orquestrador) com Gemini real, verifica domínio (T010 aceita `fora_de_escopo_ou_segurança` → recusa), fonte esperada ∈ fontes retornadas e conteúdo-chave por asserções por caso; grava `docs/evaluation/avaliacao-<data>.jsonl`. Valores de AV-T006/T007/T011 comparados a cálculo independente em Python puro sobre os CSV (SC-003).
+
+## 12. Juiz de avaliação (FR-039)
+- **Decisão**: juiz LLM **complementar**, só em `scripts/evaluate.py` (via `scripts/judge.py`), com modelo Gemini Pro definido em `JUDGE_MODEL`. Aprovado/reprovado continua determinístico; o juiz registra nota, justificativa e `divergente` (`contracts/judge.md`).
+- **Rationale (escolha do usuário)**: mesma chave e mesmo SDK `google-genai` já previstos, sem dependência nova; o juiz só troca de modelo, não de provedor.
+- **Alternativa descartada**: juiz de outra família (sugestão da IA: Claude), que reduz o viés de autoavaliação mas exige outra chave e outro SDK. Fica como **melhoria futura**.
+- **Limitação e mitigação**: viés favorável de mesma família. Mitigado com referência explícita por caso (documento esperado, valor do oráculo, registro de ouvidoria), rubrica fixa, temperatura 0 e decisão final determinística. Será documentado em `docs/limitacoes.md` (T062).
+- **Quando**: implementado com a T056, na Fase 5.
+

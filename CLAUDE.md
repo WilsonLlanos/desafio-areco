@@ -1,7 +1,7 @@
 # CLAUDE.md — Desafio Aurora (Orquestrador de Agentes)
 
 Instruções para o agente de IA que trabalha neste repositório. A fonte de verdade dos princípios é
-`.specify/memory/constitution.md` (v1.2.0); este arquivo resume o que importa no dia a dia.
+`.specify/memory/constitution.md` (v1.2.1); este arquivo resume o que importa no dia a dia.
 
 ## Contexto
 
@@ -33,7 +33,9 @@ O desafio avalia **como o desenvolvimento é conduzido com IA**, não só o resu
 As sessões do Claude Code ficam em `~/.claude/projects/-home-wilso-projetos-desafio-areco/`
 (JSONL). As exportações entregáveis vão para `docs/conversas/`, descritas no README dessa pasta
 (origem de cada arquivo). Sanitizar antes de versionar: chaves de API, tokens, credenciais e
-dados pessoais (inclusive e-mail do usuário). Ao fim de cada fase, exportar a(s) sessão(ões) da fase.
+dados pessoais (inclusive e-mail do usuário). A exportação é feita uma vez, no fim do projeto
+(T065), porque uma mesma sessão atravessa várias fases; até lá, as transcrições JSONL locais são a
+fonte e não devem ser apagadas.
 
 ## Regras de trabalho
 

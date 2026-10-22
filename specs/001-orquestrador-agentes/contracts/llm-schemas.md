@@ -18,7 +18,7 @@ Regras: limiar 0.6 (`CONFIDENCE_THRESHOLD`); `ambigua`, confiança abaixo do lim
 
 ```json
 {
-  "consulta": "soma_despesas | soma_receitas | comparar_periodos | orcamento_por_departamento | execucao_orcamentaria | inadimplencia",
+  "consulta": "soma_despesas | soma_receitas | receita_liquida | comparar_periodos | orcamento_por_departamento | execucao_orcamentaria | inadimplencia",
   "ano": 2025,
   "mes_inicio": 1,
   "mes_fim": 3,
@@ -26,11 +26,16 @@ Regras: limiar 0.6 (`CONFIDENCE_THRESHOLD`); `ambigua`, confiança abaixo do lim
   "criterio_gasto": "paga | incorrida",
   "departamento": null,
   "centro_custo": null,
-  "categoria": null
+  "categoria": null,
+  "metrica": "receitas | despesas",
+  "ano_b": null,
+  "mes_inicio_b": null,
+  "mes_fim_b": null,
+  "ordem": "maior | menor"
 }
 ```
 
-Defaults aplicados pelo código quando nulo: `tipo_data=competencia`, `criterio_gasto=incorrida` (declarado na resposta). `ano` ∈ {2025, 2026}; `centro_custo` casa `^CC[1-6]00$`.
+Todos os campos são opcionais (nulos quando ausentes); campo desconhecido é rejeitado (`extra="forbid"`). Defaults aplicados pelo código quando nulo: `tipo_data=competencia`; `criterio_gasto=incorrida` em somas de despesas (FR-017) e `paga` em execução orçamentária (FR-037), sempre declarados. `ano` ausente → esclarecimento (FR-035); `ano` ∈ {2025, 2026}; `centro_custo` casa `^CC[1-6]00$`. `metrica`, `ano_b`, `mes_inicio_b`, `mes_fim_b` só valem para `comparar_periodos`; `ordem` só para `orcamento_por_departamento`. Fonte de verdade: `ParamsFinanceiro` em `app/queries/financeiro.py`.
 
 ## Parâmetros de ouvidoria (domínio ouvidoria)
 
@@ -43,11 +48,12 @@ Defaults aplicados pelo código quando nulo: `tipo_data=competencia`, `criterio_
   "prioridade": null,
   "canal": null,
   "data_de": null,
-  "data_ate": null
+  "data_ate": null,
+  "referencia_tipo": "status | categoria | prioridade | canal"
 }
 ```
 
-`protocolo` casa `^OUV-\d{4}$` (normalizado para maiúsculas); `status`, `categoria`, `prioridade`, `canal` ∈ enums de `referencia_ouvidoria.json`.
+`protocolo` casa `^OUV-\d{4}$` (normalizado para maiúsculas); `status`, `categoria`, `prioridade` ∈ enums de `referencia_ouvidoria.json`; `canal` ∈ {Portal, E-mail, Telefone, Chat} (dicionário de dados). `data_de`/`data_ate` em ISO, com `data_ate` exclusivo. `referencia_tipo` só vale para `consulta=referencia`. Valor fora do enum → esclarecimento listando os válidos.
 
 ## Redação do agente de informações internas (`LLMClient.answer`)
 

@@ -15,13 +15,15 @@ from app.config import Settings, load_settings
 from app.llm.base import LLMClient
 from app.llm.rules import RulesLLM
 from app.orchestrator import montar_grafo
+from app.rag.index import Indice
 
 log = logging.getLogger("aurora")
 
 
 def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -> FastAPI:
     settings = settings or load_settings()
-    llm = llm or RulesLLM()  # provedor real entra na Fase 4
+    indice = Indice(settings.data_dir)
+    llm = llm or RulesLLM(settings.data_dir, indice)  # provedor real entra na Fase 4
     app = FastAPI(title="Orquestrador Aurora", version="0.1.0")
 
     @contextmanager
@@ -29,7 +31,7 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
         with db.connect_ro(settings) as conn:
             yield conn
 
-    grafo = montar_grafo(llm, conexao, settings.confidence_threshold)
+    grafo = montar_grafo(llm, conexao, settings.confidence_threshold, settings.data_dir, indice)
 
     def erro(status: int, detail: str, pergunta: str | None = None, t0: float | None = None,
              exc: Exception | None = None) -> JSONResponse:

@@ -45,7 +45,7 @@ def test_regras_de_classificacao(texto, dominio):
     assert RulesLLM().classify(texto).dominio == dominio
 
 
-def test_dominio_sem_agente_responde_indisponivel(client_sem_banco):
+def test_informacoes_internas_respondem_sem_banco(client_sem_banco):
     d = client_sem_banco.post("/ask", json={"pergunta": "Como solicito férias?"}).json()
-    assert d["dominio"] == "informacoes_internas" and d["status"] == "erro"
-    assert "ainda não está disponível" in d["resposta"]
+    assert d["dominio"] == "informacoes_internas" and d["agente"] == "informacoes_internas"
+    assert d["status"] == "ok" and "30 dias corridos" in d["resposta"]
