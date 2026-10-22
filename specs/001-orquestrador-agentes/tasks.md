@@ -136,12 +136,14 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 **Teste independente**: `scripts/evaluate.py` gera o log com 12 linhas; um clone limpo sobe seguindo só o README.
 
 - [ ] T056 [US5] `scripts/evaluate.py`: lê `data/testes/perguntas_avaliacao.json`, chama `POST /ask` com LLM real, verifica domínio (AV-T010 aceita recusa), fonte esperada ∈ fontes e conteúdo-chave por caso; compara AV-T006/T007/T011 ao oráculo; grava `docs/evaluation/avaliacao-<data>.jsonl` (por caso: `trace_id`, esperado × obtido, critério, resultado, latência) e imprime tabela; calcula o p90 da latência e compara com a meta de 10 s (SC-007)
+- [ ] T056a [US5] `scripts/judge.py`: juiz complementar conforme `contracts/judge.md` (Gemini Pro em `JUDGE_MODEL`, mesma `GEMINI_API_KEY`, `response_schema`, temperatura 0, pergunta/resposta delimitadas como dados, referência por caso); integrar ao `evaluate.py` com `juiz_modelo`, `juiz` e `divergente` no log e contagem de divergências no resumo; sem `JUDGE_MODEL` → `nao_executado`; falha → `erro`, sem reprovar o caso; validar o id do modelo e registrar no DEVLOG (FR-039)
+- [ ] T056b [P] [US5] `tests/test_judge.py` com `FakeLLM`: montagem da entrada (referência certa por domínio, delimitação), validação do schema (saída inválida → `erro`), regra de `divergente` nos dois sentidos, `JUDGE_MODEL` ausente → `nao_executado`, falha do juiz não reprova; garantir que nenhum módulo de `app/` importa `scripts.judge`
 - [ ] T057 [US5] Executar a avaliação com `GEMINI_API_KEY` real, conferir ausência de segredos no log e versionar o resultado; gerar também o log de amostra das interações em `docs/evaluation/interacoes-amostra.jsonl` sem dados sensíveis
 - [ ] T058 [US5] Analisar falhas da avaliação, ajustar e reexecutar; registrar tentativas e decisões no DEVLOG
 - [ ] T059 [P] [US3] `README.md` final: pré-requisitos, passo a passo, variáveis, subida, testes (`pytest` e avaliação), estrutura do repositório, solução de problemas; seção "Segurança" com as camadas (guarda pré-LLM, detector de injeção, trechos delimitados, consultas fixas com papel `ro`, números e fontes por código), limitações (regex não cobre paráfrases/ofuscação) e "a implementar" (classificador dedicado, ex.: Prompt Guard ou LLM como juiz, e conjunto adversarial maior)
 - [ ] T060 [P] `docs/arquitetura.md`: visão geral, diagrama do grafo LangGraph (`draw_mermaid`), fluxo de dados, papéis de banco, rastreabilidade
-- [ ] T061 [P] `docs/decisoes.md`: decisões do briefing §8 e do clarify (LangGraph, BM25, Gemini, esclarecimento multi-domínio, incorrida, formato de fontes), alternativas descartadas
-- [ ] T062 [P] `docs/limitacoes.md`: limitações conhecidas e **pendências**: o que ficou pendente, o que foi tentado e por que não funcionou, como concluir, o que faria diferente; inclui que o log grava a pergunta como digitada (exigência da constituição I), então dado pessoal digitado pelo usuário vai para o log
+- [ ] T061 [P] `docs/decisoes.md`: decisões do briefing §8 e do clarify (LangGraph, BM25, Gemini, esclarecimento multi-domínio, incorrida, formato de fontes), alternativas descartadas; inclui o juiz de avaliação (Gemini Pro, complementar) e a alternativa de outra família como melhoria futura
+- [ ] T062 [P] `docs/limitacoes.md`: limitações conhecidas e **pendências**: o que ficou pendente, o que foi tentado e por que não funcionou, como concluir, o que faria diferente; inclui que o log grava a pergunta como digitada (exigência da constituição I), então dado pessoal digitado pelo usuário vai para o log; inclui o viés de mesma família do juiz e a mitigação (referência + rubrica + temperatura 0 + decisão determinística)
 - [ ] T063 [P] [US4] Documentar em `docs/arquitetura.md` como consultar logs (`/traces/{id}` e `logs/interactions.jsonl`) e a política de dados nos logs
 - [X] T064 Atualizar a seção "Decisões em aberto" de `specs/001-orquestrador-agentes/spec.md` com as decisões tomadas e corrigir a numeração/estado nos documentos — **feito após `/speckit-analyze`** (seção substituída por "Decisões da seção 8 do briefing")
 - [ ] T065 Exportar o histórico das conversas para `docs/conversas/` conforme a tabela de `docs/conversas/README.md` (README já criado na pré-fase; alternativa documentada se a exportação for parcial), removendo chaves, tokens, credenciais e e-mail, e revisar a sanitização; atualizar a coluna "Exportado"
@@ -157,7 +159,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - Fase 2: T027 e T029 em paralelo; T028 depende de T027; T030 de T029; T032 de T028 e T030; testes T033–T036 em paralelo após os agentes.
 - Fase 3: T038 → T039 → T040 → T041; testes em paralelo.
 - Fase 4: T045 e T049 independentes; T047 depende de T045 e T046; T054 depois de T048–T050.
-- Fase 5: T056 → T057 → T058; documentação T059–T063 em paralelo; T065 e T066 por último.
+- Fase 5: T056 → T056a → T057 → T058 (T056b em paralelo a T056a); documentação T059–T063 em paralelo; T065 e T066 por último.
 
 ## Cobertura das user stories
 
@@ -167,7 +169,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 | US2 | T040, T043, T049–T054 |
 | US3 | T003–T005, T009, T016, T017, T059, T066 |
 | US4 | T011, T021, T023, T063 |
-| US5 | T056–T058 |
+| US5 | T056, T056a, T056b, T057, T058 |
 
 ## Estratégia de implementação
 

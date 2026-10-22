@@ -38,4 +38,4 @@ Validações de ingestão: datas ISO; `valor_brl` → `Decimal`; enums; linha in
 
 ## Caso de avaliação (resultado por caso no log de avaliação)
 
-`caso_id` (AV-Txxx), `trace_id`, `pergunta`, `dominio_esperado`/`obtido`, `fonte_esperada`/`obtida`, `criterio`, `resultado` (pass/fail + motivo), `latencia_ms`.
+`caso_id` (AV-Txxx), `trace_id`, `pergunta`, `dominio_esperado`/`obtido`, `fonte_esperada`/`obtida`, `criterio`, `resultado` (pass/fail + motivo), `latencia_ms`, `juiz_modelo`, `juiz` (`{atende_criterio, fiel_a_referencia, alucinacao, justificativa}` ou `nao_executado`/`erro`), `divergente` (ver `contracts/judge.md`).

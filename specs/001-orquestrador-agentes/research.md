@@ -57,3 +57,11 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 
 ## 11. Avaliação
 - `scripts/evaluate.py`: lê `perguntas_avaliacao.json`, chama `POST /ask` (ou o orquestrador) com Gemini real, verifica domínio (T010 aceita `fora_de_escopo_ou_segurança` → recusa), fonte esperada ∈ fontes retornadas e conteúdo-chave por asserções por caso; grava `docs/evaluation/avaliacao-<data>.jsonl`. Valores de AV-T006/T007/T011 comparados a cálculo independente em Python puro sobre os CSV (SC-003).
+
+## 12. Juiz de avaliação (FR-039)
+- **Decisão**: juiz LLM **complementar**, só em `scripts/evaluate.py` (via `scripts/judge.py`), com modelo Gemini Pro definido em `JUDGE_MODEL`. Aprovado/reprovado continua determinístico; o juiz registra nota, justificativa e `divergente` (`contracts/judge.md`).
+- **Rationale (escolha do usuário)**: mesma chave e mesmo SDK `google-genai` já previstos, sem dependência nova; o juiz só troca de modelo, não de provedor.
+- **Alternativa descartada**: juiz de outra família (sugestão da IA: Claude), que reduz o viés de autoavaliação mas exige outra chave e outro SDK. Fica como **melhoria futura**.
+- **Limitação e mitigação**: viés favorável de mesma família. Mitigado com referência explícita por caso (documento esperado, valor do oráculo, registro de ouvidoria), rubrica fixa, temperatura 0 e decisão final determinística. Será documentado em `docs/limitacoes.md` (T062).
+- **Quando**: implementado com a T056, na Fase 5.
+

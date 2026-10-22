@@ -158,3 +158,10 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Não aplicado (A1)**: a constituição V diz "pytest sem rede", e os testes usam o PostgreSQL pela rede interna do Docker. A intenção (sem LLM nem serviços externos) é cumprida; esclarecer o texto exige emenda PATCH, fica como sugestão.
 - **Observação**: as tarefas T049a e T051a (detecção de prompt injection por regex) foram adicionadas ao `tasks.md` fora desta sessão e entraram no commit da Fase 2 junto com o arquivo.
 
+### 2026-10-21 — Decisão: juiz LLM na avaliação (FR-039)
+- **Pedido do usuário**: um juiz (modelo superior) avaliando as respostas só na suíte AV-T001–T012, sem entrar na aplicação.
+- **Sugestão da IA (descartada)**: juiz de outra família (Claude Opus 5.5), para reduzir o viés de um modelo avaliar bem a própria família.
+- **Decisão do usuário**: Gemini Pro em `JUDGE_MODEL` (mesmo provedor e mesma chave, outro modelo), **complementar** (as checagens determinísticas continuam decidindo aprovado/reprovado; o juiz dá nota, justificativa e sinaliza divergência), implementado com a T056 na Fase 5. Juiz de outra família fica como melhoria futura.
+- **Mitigação do viés**: referência explícita por caso, rubrica fixa, temperatura 0, decisão final determinística.
+- Artefatos: FR-039 e Clarifications na spec, `research.md` §12, `contracts/judge.md` (novo), `data-model.md`, `plan.md`, T056a/T056b (e T061/T062) em `tasks.md`, `JUDGE_MODEL` no `.env.example`. Nenhum código alterado.
+

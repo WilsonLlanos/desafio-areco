@@ -20,6 +20,7 @@
 - Q: Tamanho máximo de listas? → A: 10 itens mais o total (FR-010).
 - Q: Execução orçamentária sem critério de despesa? → A: Despesas pagas, pois o indicador é "despesas realizadas ÷ orçamento"; declarado na resposta (FR-037; decisão da IA na Fase 2, aprovada após `/speckit-analyze`).
 - Q: Inadimplência em valor ou em quantidade? → A: Em valor, declarado na resposta (FR-038; idem).
+- Q: Usar um juiz LLM na avaliação? → A: Sim, Gemini Pro (`JUDGE_MODEL`), complementar e só no script de avaliação; o determinístico decide (FR-039).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -176,6 +177,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **FR-036**: Para "receita líquida", como a base não contém deduções registradas, o sistema MUST responder com o total das receitas e declarar que não há deduções registradas (líquida igual à soma das receitas).
 - **FR-037**: A execução orçamentária MUST usar despesas pagas quando a pergunta não especificar o critério, porque o indicador é definido como "despesas realizadas ÷ orçamento aprovado do mesmo período e centro de custo"; a resposta MUST declarar o critério.
 - **FR-038**: A inadimplência de recebíveis MUST ser calculada em valor (receitas com status Atrasado ÷ total de receitas do período), declarando o critério na resposta.
+- **FR-039**: O script de avaliação MAY usar um juiz LLM (`JUDGE_MODEL`, modelo Gemini Pro) para dar nota e justificativa a cada resposta e sinalizar divergência com as checagens determinísticas, que continuam decidindo aprovado/reprovado. O juiz MUST NOT fazer parte do fluxo da aplicação, e sua falha MUST NOT reprovar um caso (`contracts/judge.md`).
 
 ### Key Entities
 
