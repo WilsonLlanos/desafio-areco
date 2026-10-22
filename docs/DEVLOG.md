@@ -172,3 +172,59 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **U2 (médio)**: spec e plano não diziam o que fazer ao detectar injeção. **Decisão do usuário**: detecção na pergunta → **recusa** com explicação de escopo antes do LLM; trecho de documento → não indexado (FR-029, Clarifications, `research.md` §7, `plan.md`). Documentado que a regex é camada complementar e contornável; a proteção principal é estrutural.
 - **Baixos**: T056b deixa de ser `[P]` (depende da T056a); juiz citado no `plan.md` e no `quickstart.md`; **emenda 1.2.1 da constituição** (PATCH, princípio V): "sem rede" passa a ser "sem rede externa nem LLM real", com PostgreSQL local/do compose permitido.
 
+---
+
+## Fase 3 — Informações internas (RAG)
+
+> A partir desta fase, uma nota por tarefa, escrita logo após a tarefa e antes do `[X]` (correção do achado C1).
+
+### 2026-10-21 — T038 Índice RAG e `detectar_injecao`
+- `app/texto.py` (normalização, stopwords PT, radical de 5 letras), `app/rag/index.py` (17 itens: 10 documentos inteiros + 7 do FAQ; metadados `domain`, `source`, `secao`, `document_version` extraída de "Versão X — data") e `guards.detectar_injecao` (regex PT/EN). Item com padrão de injeção é logado e não indexado.
+- **Desvio do plano**: BM25 implementado à mão (~25 linhas) em vez de `rank-bm25`, que traria `numpy` para 17 itens; `requirements.txt` sem dependência nova.
+- **Decisão**: um item por documento (os documentos têm ~500–850 bytes, como o briefing indica), não por seção; o FAQ vira itens próprios, citando o `documento` de origem.
+- **Teste manual**: AV-T001 → FAQ-001 (doc 01), AV-T002 → FAQ-003 (02), AV-T003 → doc 03, AV-T008 → FAQ-005 (04), AV-T012 → doc 07; "previsão do tempo" e "capital da França" sem resultado; nenhum dos 17 itens reais casou com o filtro de injeção. Limitação observada: "quais as instruções para pedir reembolso?" traz primeiro o FAQ de acesso (termo "pedir"); a resposta ainda cita reembolso entre os 3 primeiros.
+
+### 2026-10-21 — T039 Agente de informações internas (extrativo)
+- `app/agents/internal.py`: busca no índice; escore abaixo de 2,0 → "não encontrei" (`nao_encontrado`), sem inventar. Resposta: (1) se a pergunta tem valor em R$, a linha da faixa de alçada correspondente ("Até", "De … a …", "Acima de"); (2) se o melhor item é do FAQ, a resposta do FAQ; (3) senão, até 2 linhas do documento com mais termos em comum e 1 linha de proibição ("Não…/Nunca…") como "Atenção". Linhas da seção "Limites do agente" e frases sobre "o agente" ficam fora da resposta ao usuário.
+- Fonte definida por código: arquivo de origem + seção ou id do FAQ + versão do documento.
+- **Decisão**: a faixa de valor tem prioridade sobre o FAQ, porque o FAQ-004 só cobre "acima de R$ 10.000"; perguntar por R$ 5.000 com a resposta do FAQ estaria errado.
+- **Teste manual**: AV-T001, T002, T003, T008 e T012 com o conteúdo-chave do critério e a fonte esperada; R$ 2.000 (limite) → "Até R$ 2.000", R$ 5.000,00 → faixa intermediária; "capital da França" → não encontrado. Ajuste de código: regex de faixa simplificadas (constante para texto normalizado).
+
+### 2026-10-21 — T040 Limites dos documentos (FR-007)
+- `internal.limite()` roda antes da busca e devolve encaminhamento com `status=recusado` e fonte do documento que define o limite: dados de outros colaboradores/clientes → `09_politica_privacidade.md` e privacidade@; saldo individual de férias → `01_politica_ferias.md` e RH; holerite/salário próprio → `08_faq_rh.md` e RH; caso trabalhista → `01_politica_ferias.md` e RH.
+- **Decisão**: dados de terceiros é checado primeiro ("férias do colega" é dado de terceiro, não saldo próprio). Pedido de **senha** de terceiro (AV-T010) não entra aqui: é a guarda de credenciais da Fase 4 (T049).
+- **Teste manual**: 6 pedidos individuais recusados com o canal certo; "Como solicito férias?" e "Quais dados pessoais posso usar em testes?" seguem respondidos normalmente (sem falso positivo).
+
+### 2026-10-21 — T041 Orquestrador com o agente de informações internas
+- Nó `agente_internas` no grafo (substitui o nó provisório `indisponivel` da Fase 1); o índice é criado uma vez em `create_app` e compartilhado pelo grafo e pelo `RulesLLM`. `ESCORE_MINIMO` passou para `app/rag/index.py` (usado pelo agente e pelas regras).
+- `RulesLLM`: sem palavra-chave de nenhum domínio, o escore do BM25 ≥ 2,0 classifica como informações internas (confiança 0,7); abaixo disso, fora de escopo. Palavras-chave novas de internas: holerite, contracheque, trabalhista, rescisão.
+- Teste da Fase 1 `test_dominio_sem_agente_responde_indisponivel` reescrito como `test_informacoes_internas_respondem_sem_banco` (o agente agora existe e não depende do banco).
+- **Verificação pela API (modo degradado)**: os 12 casos AV com o domínio esperado; 11 com a fonte esperada. **AV-T010** ("senha de outro colaborador") cai em `fora_de_escopo` sem orientar o canal autorizado: a recusa com orientação é da Fase 4 (T049). `pytest` 81 passados, `ruff` limpo.
+
+### 2026-10-21 — T042 Testes do RAG
+- `tests/test_rag.py` (20 testes): índice com 17 itens e metadados; FAQ aponta para o documento; AV-T001, T002, T003, T008 e T012 com fonte exata e conteúdo-chave do critério; alçada de compra nos limites das faixas (R$ 2.000, 2.000,01, 10.000, 10.000,01); tudo o que a resposta afirma é texto do documento/FAQ (FR-008); fonte com seção e versão; perguntas sem relação → `nao_encontrado` sem fonte; linhas de "Limites do agente" fora da resposta; pela API (sem banco), domínio, agente e fonte.
+- **Bug achado pelo teste**: "Me conte uma piada" respondia com o procedimento financeiro, porque o radical de 5 letras igualava "conte" (contar) e "contem" (conter). **Correção**: radical de 6 letras; os escores das perguntas AV quase não mudaram e todas continuam acima do mínimo.
+- `pytest` 101 passados.
+
+### 2026-10-21 — T043 Testes dos limites e de "não inventar"
+- `tests/test_internal_limits.py` (16 testes): 8 pedidos individuais recusados com o canal e a fonte certos (RH ou privacidade@); perguntas gerais sobre férias, testes e benefícios não bloqueadas; o limite vem antes da busca; perguntas sem resposta na base → "não encontrei"; pela API, holerite → internas, recusado.
+- **Bugs achados pelos testes**: (1) "férias da minha colega" não era tratado como dado de terceiro (o padrão não aceitava "minha" entre "da" e "colega") → padrão ampliado; (2) "política de viagens internacionais" respondia com a política de férias, só por "política" e por "internacionais"/"interno" terem o mesmo radical → palavras genéricas da base (política, documento, procedimento, interno, empresa…) viraram stopwords.
+- **Efeito colateral corrigido**: "Qual a política de home office?" ficou sem resposta, porque o documento 06 só tem "home office" no nome do arquivo → o nome do arquivo passou a entrar nos termos indexados (metadado). Teste de regressão em `test_rag.py`.
+- `pytest` 119 passados.
+
+### 2026-10-21 — T043a Testes do filtro de injeção no RAG
+- `tests/test_injecao_rag.py` (20 testes): 12 padrões detectados (PT/EN, maiúsculas, acentos, marcadores de papel); 5 perguntas legítimas com "instruções", "regras", "sistema" não detectadas; nenhum documento real casa; documento com linha injetada (cópia de `data/` em diretório temporário) é logado e não indexado, os outros 16 itens continuam; a instrução plantada não aparece na resposta.
+- **Consequência registrada (trade-off)**: como o índice tem um item por documento, uma linha injetada tira o documento inteiro do índice (o FAQ que aponta para ele continua respondendo). Com documentos de ~600 bytes e corpus imutável, é aceitável; num corpus editável, o filtro deveria remover só a linha. Passaram de primeira; nenhum código alterado nesta tarefa.
+
+### 2026-10-21 — T044 Gate da Fase 3
+- `docker compose up --build`: `app` sobe com o índice; `docker compose run --rm app pytest` → **139 passados**; `ruff` limpo; perguntas reais por HTTP conferidas (férias, alçada R$ 12.000, incidente, holerite recusado, fora de escopo). Limpeza: `rules.py` passou a usar `normalizar` de `app/texto.py` (havia duas cópias). README com o estado da Fase 3. Diff sem segredos.
+
+### Resumo da Fase 3
+- **Objetivo**: AV-T001, T002, T003, T008 e T012 respondidos só com o texto dos documentos, com fonte, funcionando sem chave.
+- **O que funciona (verificado)**: índice de 17 itens (10 documentos + 7 do FAQ) com BM25 próprio; os 5 casos AV de informações internas com a fonte esperada e o conteúdo-chave do critério; alçada de compra pela faixa de valor (limites testados); limites dos documentos (saldo, holerite, trabalhista, dados de terceiros) com encaminhamento ao canal certo; "não encontrei" quando a base não tem a resposta; filtro de prompt injection na indexação. Pela API em modo degradado, os 12 casos AV caem no domínio esperado; 11 com a fonte esperada.
+- **Decisões técnicas**: BM25 próprio em vez de `rank-bm25` (evita `numpy`); um item por documento; faixa de valor com prioridade sobre o FAQ; stopwords de palavras genéricas da base; nome do arquivo como termo indexado; `ESCORE_MINIMO` 2,0 compartilhado pelo agente e pelo roteamento por regras.
+- **Problemas e soluções**: radical de 5 letras colidia ("conte" × "contem") → 6 letras; "política de viagens internacionais" casava com férias → stopwords genéricas; "home office" sumiu → nome do arquivo indexado; "da minha colega" escapava do limite → padrão ampliado.
+- **Testes**: 139 passados (58 novos nesta fase), sem rede externa nem LLM.
+- **Limitações e pendências**: resposta extrativa (sem redação por LLM até a Fase 4) pode trazer linhas pouco relevantes em perguntas genéricas; radical por truncamento é grosseiro; uma linha injetada remove o documento inteiro do índice. AV-T010 ainda cai em fora de escopo sem orientar o canal autorizado (Fase 4, T049). Commit da fase e aprovação para a Fase 4.
+- **Processo**: notas do DEVLOG escritas tarefa a tarefa, antes de cada `[X]` (correção do achado C1).
+

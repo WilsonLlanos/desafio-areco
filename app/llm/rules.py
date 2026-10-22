@@ -1,13 +1,14 @@
 """Roteamento e extração por regras: modo degradado sem chave de LLM (FR-034)."""
 import csv
 import re
-import unicodedata
 from functools import lru_cache
 from pathlib import Path
 
 from app.api.schemas import Classificacao
 from app.config import ROOT
 from app.periodo import MESES, anos_no_texto, extrair_periodo, intervalo
+from app.rag.index import ESCORE_MINIMO, Indice
+from app.texto import normalizar
 
 PROTOCOLO_TOKEN = re.compile(r"\bouv-\w*", re.I)
 PROTOCOLO_VALIDO = re.compile(r"\bOUV-\d{4}\b", re.I)
@@ -18,7 +19,8 @@ PALAVRAS = {
     "financeiro": ["receita", "despesa", "orcamento", "gast", "custo", "lancamento", "financeiro",
                    "inadimplencia", "faturamento", "centro de custo"],
     "informacoes_internas": ["ferias", "reembolso", "politica", "compra", "phishing", "incidente",
-                             "home office", "acesso", "privacidade", "procedimento"],
+                             "home office", "acesso", "privacidade", "procedimento", "holerite", "contracheque",
+                             "trabalhista", "rescisao"],
 }
 # Categorias de ouvidoria que coincidem com assuntos de políticas internas: não contam como
 # "informações internas" quando a pergunta já é claramente de ouvidoria.
@@ -40,11 +42,6 @@ PRIORIDADES = {"baixa": "Baixa", "media": "Média", "alta": "Alta", "critica": "
 CANAIS = {"portal": "Portal", "e-mail": "E-mail", "email": "E-mail", "telefone": "Telefone", "chat": "Chat"}
 
 
-def normalizar(texto: str) -> str:
-    sem_acento = unicodedata.normalize("NFD", texto.lower())
-    return "".join(c for c in sem_acento if unicodedata.category(c) != "Mn")
-
-
 def _contem(texto: str, palavra: str) -> bool:
     return re.search(rf"\b{re.escape(palavra)}\w*", texto) is not None  # aceita plural/flexões
 
@@ -59,8 +56,9 @@ def _departamentos(data_dir: Path) -> dict[str, str]:
 class RulesLLM:
     modo = "degradado"
 
-    def __init__(self, data_dir: Path | None = None):
+    def __init__(self, data_dir: Path | None = None, indice: Indice | None = None):
         self.data_dir = Path(data_dir) if data_dir else ROOT / "data"
+        self.indice = indice  # sem palavra-chave, o escore do BM25 decide internas × fora de escopo
 
     # --- classificação -------------------------------------------------------------------------
     def classify(self, pergunta: str) -> Classificacao:
@@ -76,6 +74,10 @@ class RulesLLM:
             return Classificacao(dominio=dominios[0], confianca=0.8, candidatos=dominios)
         if len(dominios) > 1:
             return Classificacao(dominio="ambigua", confianca=0.4, candidatos=dominios)
+        if self.indice:
+            achados = self.indice.buscar(pergunta, k=1)
+            if achados and achados[0][1] >= ESCORE_MINIMO:
+                return Classificacao(dominio="informacoes_internas", confianca=0.7, candidatos=["informacoes_internas"])
         return Classificacao(dominio="fora_de_escopo", confianca=0.6)
 
     # --- extração de parâmetros ----------------------------------------------------------------
