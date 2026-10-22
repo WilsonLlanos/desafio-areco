@@ -3,19 +3,20 @@
 Aplicação web em que um orquestrador (LangGraph) classifica a pergunta e a encaminha ao agente
 especializado: **financeiro**, **informações internas** ou **ouvidoria**. Dados sintéticos (empresa fictícia).
 
-> **Estado: Fase 3 de 5.** Funciona: subida via Docker, carga idempotente das bases, `POST /ask` com
-> roteamento por regras, agente de ouvidoria (protocolo, filtros, contagens, listas e valores válidos),
-> agente financeiro (receitas, despesas, orçamento, execução, inadimplência, comparação), agente de
-> informações internas (busca BM25 nos documentos e no FAQ, resposta extrativa com fonte e versão,
-> limites de dados individuais), frontend de chat e rastreio por `trace_id`. Ainda não implementados:
-> uso do Gemini, recusa de credenciais (AV-T010) e recusa de prompt injection na pergunta. Ver `specs/001-orquestrador-agentes/tasks.md` e `docs/DEVLOG.md`.
+> **Estado: Fase 4 de 5.** Funciona: subida via Docker, carga idempotente das bases, `POST /ask` com
+> classificação, extração de parâmetros e redação via Google Gemini (`gemini-3.1-flash-lite`), ou por
+> regras sem chave (modo degradado, também usado quando o provedor falha), agentes de ouvidoria,
+> financeiro e informações internas (BM25 próprio, fonte e versão), recusa de credenciais e dados de
+> terceiros (AV-T010) e de prompt injection antes do LLM, frontend de chat e rastreio por `trace_id`.
+> Falta a Fase 5: script de avaliação AV-T001–AV-T012 com juiz, documentação final e exportação das
+> conversas. Ver `specs/001-orquestrador-agentes/tasks.md` e `docs/DEVLOG.md`.
 
 ## Executar
 
 Pré-requisitos: Docker e Docker Compose.
 
 ```bash
-cp .env.example .env     # ajuste as senhas; GEMINI_API_KEY é opcional nesta fase
+cp .env.example .env     # ajuste as senhas; sem GEMINI_API_KEY o sistema roda em modo degradado
 docker compose up --build
 ```
 

@@ -12,7 +12,8 @@ from app.main import create_app
 @pytest.fixture(scope="session")
 def settings(tmp_path_factory) -> Settings:
     s = load_settings()
-    return dataclasses.replace(s, log_dir=tmp_path_factory.mktemp("logs"))
+    # sem chave: a suíte nunca chama o LLM real, mesmo no contêiner com .env preenchido (constituição V)
+    return dataclasses.replace(s, log_dir=tmp_path_factory.mktemp("logs"), gemini_api_key="")
 
 
 @pytest.fixture(scope="session")

@@ -114,19 +114,19 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 
 **Teste independente**: pedido de senha é recusado antes do LLM; saída inválida do modelo vira esclarecimento; sem chave a API segue em modo degradado.
 
-- [ ] T045 [US1] `app/llm/gemini.py`: cliente `google-genai` com `GEMINI_MODEL=gemini-3.1-flash-lite`, saída estruturada (`response_schema`) para classificação e parâmetros, timeout de 8 s; validar o id do modelo e o suporte a saída estruturada, registrando o resultado no DEVLOG; incluir `google-genai` (versão fixada) no `requirements.txt`; o `response_schema` segue `contracts/llm-schemas.md` (inclui `receita_liquida`, comparação, `ordem` e `referencia_tipo`)
-- [ ] T046 [US1] Validação Pydantic das saídas do LLM conforme `contracts/llm-schemas.md`; valor fora de enum/formato → parâmetro ausente → esclarecimento
-- [ ] T047 [US1] `app/orchestrator.py`: seleção `GeminiLLM` × `RulesLLM` por `GEMINI_API_KEY`, `modo` na resposta, limiar de confiança 0,6, fallback para regras na classificação quando o provedor falha (FR-034, FR-026)
-- [ ] T048 [US1] `app/agents/internal.py`: redação via `LLMClient.answer` com pergunta e trechos delimitados como dados; descartar a resposta se `fontes_usadas` ⊄ trechos recuperados e usar a versão extrativa
-- [ ] T049 [US2] `app/guards.py`: guarda determinística pré-LLM para credenciais, senhas e dados de terceiros (AV-T010, FR-028) com orientação aos canais de segurança/privacidade citando `04_seguranca_da_informacao.md` e `09_politica_privacidade.md`
-- [ ] T049a [US2] `app/guards.py`: `recusa()` **reaproveita** `detectar_injecao` (criada na T038) sobre a pergunta: injeção detectada → recusa com explicação de escopo antes do LLM (nó `guard`, sem mudar o grafo; injeção direta, FR-029); ampliar os padrões se o smoke test (T054) mostrar lacunas. Sem classificador por modelo: decisão no DEVLOG
-- [ ] T050 [US2] `app/orchestrator.py`: ramos de esclarecimento (ambígua/baixa confiança), fora de escopo com explicação dos três domínios (FR-003, FR-004)
-- [ ] T051 [P] [US2] `tests/test_guards.py`: AV-T010 recusa sem chamar o LLM; variações de redação do pedido
-- [ ] T051a [P] [US2] `tests/test_guards.py`: injeção (override PT/EN, extração de prompt, roleplay/DAN, acentos/maiúsculas) → recusa sem chamar o `FakeLLM`; perguntas legítimas com "instruções" (ex.: "quais as instruções para pedir reembolso?") → não recusadas
-- [ ] T052 [P] [US2] `tests/test_llm_contracts.py`: com `FakeLLM`, saída malformada, enum inválido, campo extra e fonte fora dos trechos são rejeitados; falha do provedor gera erro claro e log com o mesmo `trace_id`
-- [ ] T053 [P] [US2] `tests/test_routing.py`: ambígua → esclarecimento, fora de escopo → explicação, baixa confiança, modo degradado marcado na resposta
-- [ ] T054 [US2] Smoke test adversarial informal contra a função que fala com o modelo (override de instruções, extração de prompt, fabricação de protocolo/valor, injeção em trecho recuperado, ofuscação/outro idioma): registrar prompts e resultados no DEVLOG como spot-check, não auditoria
-- [ ] T055 Gate da Fase 4: `pytest` verde, `docker compose up` com e sem chave, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
+- [X] T045 [US1] `app/llm/gemini.py`: cliente `google-genai` com `GEMINI_MODEL=gemini-3.1-flash-lite`, saída estruturada (`response_schema`) para classificação e parâmetros, timeout de 8 s (**desvio**: `response_json_schema` e 10 s, mínimo da API; ver DEVLOG); validar o id do modelo e o suporte a saída estruturada, registrando o resultado no DEVLOG; incluir `google-genai` (versão fixada) no `requirements.txt`; o `response_schema` segue `contracts/llm-schemas.md` (inclui `receita_liquida`, comparação, `ordem` e `referencia_tipo`)
+- [X] T046 [US1] Validação Pydantic das saídas do LLM conforme `contracts/llm-schemas.md`; valor fora de enum/formato → parâmetro ausente → esclarecimento
+- [X] T047 [US1] `app/orchestrator.py`: seleção `GeminiLLM` × `RulesLLM` por `GEMINI_API_KEY`, `modo` na resposta, limiar de confiança 0,6, fallback para regras na classificação quando o provedor falha (FR-034, FR-026)
+- [X] T048 [US1] `app/agents/internal.py`: redação via `LLMClient.answer` com pergunta e trechos delimitados como dados; descartar a resposta se `fontes_usadas` ⊄ trechos recuperados e usar a versão extrativa
+- [X] T049 [US2] `app/guards.py`: guarda determinística pré-LLM para credenciais, senhas e dados de terceiros (AV-T010, FR-028) com orientação aos canais de segurança/privacidade citando `04_seguranca_da_informacao.md` e `09_politica_privacidade.md`
+- [X] T049a [US2] `app/guards.py`: `recusa()` **reaproveita** `detectar_injecao` (criada na T038) sobre a pergunta: injeção detectada → recusa com explicação de escopo antes do LLM (nó `guard`, sem mudar o grafo; injeção direta, FR-029); ampliar os padrões se o smoke test (T054) mostrar lacunas. Sem classificador por modelo: decisão no DEVLOG
+- [X] T050 [US2] `app/orchestrator.py`: ramos de esclarecimento (ambígua/baixa confiança), fora de escopo com explicação dos três domínios (FR-003, FR-004)
+- [X] T051 [P] [US2] `tests/test_guards.py`: AV-T010 recusa sem chamar o LLM; variações de redação do pedido
+- [X] T051a [P] [US2] `tests/test_guards.py`: injeção (override PT/EN, extração de prompt, roleplay/DAN, acentos/maiúsculas) → recusa sem chamar o `FakeLLM`; perguntas legítimas com "instruções" (ex.: "quais as instruções para pedir reembolso?") → não recusadas
+- [X] T052 [P] [US2] `tests/test_llm_contracts.py`: com `FakeLLM`, saída malformada, enum inválido, campo extra e fonte fora dos trechos são rejeitados; falha do provedor gera erro claro e log com o mesmo `trace_id`
+- [X] T053 [P] [US2] `tests/test_routing.py`: ambígua → esclarecimento, fora de escopo → explicação, baixa confiança, modo degradado marcado na resposta
+- [X] T054 [US2] Smoke test adversarial informal contra a função que fala com o modelo (override de instruções, extração de prompt, fabricação de protocolo/valor, injeção em trecho recuperado, ofuscação/outro idioma): registrar prompts e resultados no DEVLOG como spot-check, não auditoria
+- [X] T055 Gate da Fase 4: `pytest` verde, `docker compose up` com e sem chave, resumo no DEVLOG, sem segredos, **commit** e **aguardar aprovação**
 
 ---
 
