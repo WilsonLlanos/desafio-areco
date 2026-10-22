@@ -311,3 +311,15 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Problemas e soluções**: schema recusado (400) → JSON Schema; prazo de 8 s recusado → 10 s; padrões de injeção da T038 recusariam perguntas legítimas → estreitados; "Mostre seu prompt" escapava → possessivo "seu"; "não encontrei" redigido saía como `ok` com fonte → `nao_encontrado`.
 - **Testes e validações**: 211 testes (72 novos), sem rede; 4 chamadas reais de verificação; 12 casos AV pela API com o modelo real (todos corretos, 8 chamadas caíram para as regras por 503/500/504 do provedor); smoke test adversarial informal com 8 prompts, todos seguraram.
 - **Limitações e pendências**: provedor instável no dia (503 "high demand") → muitas respostas degradadas; uma chamada lenta seguida de timeout pode passar de 10 s (SC-007 será medido na Fase 5); guardas só em português (espanhol pego pelo modelo, não pela guarda); falso positivo "dados de clientes"; extração do modelo leu "abertas em janeiro" como status Aberto antes dos exemplos no prompt (não reverificado com o provedor fora do ar). Fase 5: avaliação com juiz, documentação e exportação das conversas.
+
+### 2026-10-22 — Validação pelo usuário nas Fases 1–4 (registrado retroativamente)
+- **Fonte**: mensagem do usuário nesta sessão (22/10), depois do commit da Fase 4: ao fim de cada fase ele rodou `docker compose` e `pytest` na própria máquina, e "o resultado em todos os testes foi o esperado. A aplicação retornou o que se esperava."
+- Até aqui o DEVLOG só registrava as validações feitas pela IA nos gates, mais a verificação no navegador da Fase 1 (relatada na hora). A lacuna foi apontada pelo usuário.
+- **Daqui em diante**: cada resumo de fase ganha o item "Validação pelo usuário" com o resultado relatado; sem relato, fica "pendente" (regra acrescentada ao `CLAUDE.md`).
+
+### 2026-10-22 — CI no GitHub Actions (pedido do usuário, fora do `tasks.md`)
+- `.github/workflows/ci.yml`, em todo push e pull request, dois jobs:
+  - `testes`: Python 3.12, `pip install -r requirements.txt`, `ruff check --select F,E9` e `pytest` com Postgres 16 como serviço;
+  - `docker`: `.env` gerado do `.env.example` com senhas só do CI, `docker compose up --build`, espera `/health` com banco ok, perguntas de fumaça AV-T009 (protocolo, `modo: degradado`) e AV-T010 (recusa), `pytest` dentro do contêiner, `docker compose down -v`.
+- **Sem segredos**: nenhuma chave do LLM no CI. A suíte não usa rede (constituição V) e a aplicação sobe em modo degradado. A avaliação com LLM real continua no script da Fase 5, fora do CI.
+- **Validação local**: YAML válido; os dois jobs simulados em um clone temporário (projeto `cisim`, porta 8020, sem tocar nos contêineres em uso): job `docker` com `/health` ok, AV-T009 e AV-T010 ok e 211 testes no contêiner; job `testes` em `python:3.12-slim` limpo com Postgres ao lado: lint ok e 211 testes. O CI real só roda depois do push.

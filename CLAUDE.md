@@ -42,6 +42,11 @@ fonte e não devem ser apagadas.
 - **Fases (princípio IX)**: ao terminar uma fase, parar e aguardar aprovação explícita do usuário.
   Um commit por fase. Gate: `docker compose up` funcional, `pytest` verde, DEVLOG atualizado,
   nenhum segredo no diff.
+- **Validação pelo usuário**: o usuário roda `docker compose` e `pytest` ao fim de cada fase. O
+  resultado que ele relatar entra no resumo da fase, no item "Validação pelo usuário", separado das
+  validações feitas pela IA. Sem relato, registrar "pendente", nunca presumir sucesso.
+- **CI** (`.github/workflows/ci.yml`): a cada push, lint + `pytest` e `docker compose up` com
+  perguntas de fumaça, sem chave do LLM. Mudança que quebre o CI não fecha a fase.
 - **Sem SQL do modelo (II)**: o LLM só extrai parâmetros validados; consultas são pré-definidas,
   parametrizadas, com papel de banco somente leitura. Valores monetários em `Decimal`/`NUMERIC`.
 - **Rastreabilidade (I)**: `trace_id` em toda requisição, log JSON por requisição, sem dados sensíveis.
