@@ -13,7 +13,7 @@ docker compose up --build
 ```
 Se a porta 8000 estiver ocupada, defina `APP_PORT` no `.env` e use essa porta nos exemplos abaixo.
 
-Esperado: `db` saudável; `app` aplica o schema, carrega as bases (300 lançamentos, 144 orçamentos, 180 manifestações), indexa 17 itens e escuta em `http://localhost:8000`. Sem chave, `GET /health` devolve `"modo": "degradado"`.
+Esperado: `db` saudável; `app` aplica o schema, carrega as bases (300 lançamentos, 144 orçamentos, 180 manifestações), indexa 17 itens (log `índice RAG: 17 itens (0 descartados)`) e escuta em `http://localhost:8000`. Sem chave, `GET /health` devolve `"modo": "degradado"`.
 
 ## Cenários
 

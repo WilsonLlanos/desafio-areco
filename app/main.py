@@ -17,13 +17,20 @@ from app.llm.rules import RulesLLM
 from app.orchestrator import montar_grafo
 from app.rag.index import Indice
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s - %(message)s")
 log = logging.getLogger("aurora")
 
 
 def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -> FastAPI:
     settings = settings or load_settings()
     indice = Indice(settings.data_dir)
-    llm = llm or RulesLLM(settings.data_dir, indice)  # provedor real entra na Fase 4
+    log.info("índice RAG: %d itens (%d descartados)", len(indice.itens), len(indice.descartados))
+    regras = RulesLLM(settings.data_dir, indice)
+    if llm is None and settings.gemini_api_key:
+        from app.llm.gemini import GeminiLLM
+        llm = GeminiLLM(settings.gemini_api_key, settings.gemini_model, settings.data_dir)
+    llm = llm or regras
+    log.info("LLM: %s", f"Gemini ({settings.gemini_model})" if llm.modo == "llm" else "regras (modo degradado)")
     app = FastAPI(title="Orquestrador Aurora", version="0.1.0")
 
     @contextmanager
@@ -31,7 +38,8 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
         with db.connect_ro(settings) as conn:
             yield conn
 
-    grafo = montar_grafo(llm, conexao, settings.confidence_threshold, settings.data_dir, indice)
+    grafo = montar_grafo(llm, conexao, settings.confidence_threshold, settings.data_dir, indice,
+                         reserva=regras if llm is not regras else None)
 
     def erro(status: int, detail: str, pergunta: str | None = None, t0: float | None = None,
              exc: Exception | None = None) -> JSONResponse:
@@ -69,14 +77,15 @@ def create_app(settings: Settings | None = None, llm: LLMClient | None = None) -
             return erro(502, "Não foi possível processar a pergunta agora.", req.pergunta, t0, e)
         c = estado["classificacao"]
         latencia = int((time.perf_counter() - t0) * 1000)
+        modo = estado.get("modo", llm.modo)  # "degradado" se esta requisição caiu para as regras
         resp = AskResponse(
             trace_id=tracing.current_trace_id(), resposta=estado["resposta"], dominio=c.dominio,
             agente=estado["agente"], confianca=c.confianca, fontes=estado.get("fontes", []),
-            status=estado["status"], modo=llm.modo, latencia_ms=latencia)
+            status=estado["status"], modo=modo, latencia_ms=latencia)
         tracing.record_interaction(
             settings.log_dir, trace_id=resp.trace_id, pergunta=req.pergunta, dominio_previsto=c.dominio,
             confianca=c.confianca, agente=resp.agente, fontes=[f.ref for f in resp.fontes],
-            latencia_ms=latencia, status=resp.status, modo=llm.modo)
+            latencia_ms=latencia, status=resp.status, modo=modo, erro=estado.get("erro"))
         return resp
 
     @app.get("/traces/{trace_id}")

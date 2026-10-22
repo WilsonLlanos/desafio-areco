@@ -12,7 +12,7 @@ Aplicação web de chat em que um orquestrador classifica a pergunta (financeiro
 
 **Language/Version**: Python 3.12
 
-**Primary Dependencies**: FastAPI + Uvicorn, Pydantic v2, `psycopg[binary]` 3, `rank-bm25`, `langgraph`, `google-genai` (Gemini) (logging JSON com o `logging` padrão)
+**Primary Dependencies**: FastAPI + Uvicorn, Pydantic v2, `psycopg[binary]` 3, `langgraph`, `google-genai` (Gemini) (logging JSON com o `logging` padrão); BM25 implementado em `app/rag/index.py`, sem biblioteca (ver `research.md` §1)
 
 **Storage**: PostgreSQL 16 (3 tabelas de `data/sql/schema.sql`); índice BM25 em memória reconstruído na subida; log de interações em JSON Lines (volume Docker)
 
@@ -38,7 +38,7 @@ Aplicação web de chat em que um orquestrador classifica a pergunta (financeiro
 | II. Sem SQL do modelo | Catálogo fixo de consultas em `app/queries/`; LLM só devolve parâmetros validados por Pydantic/enums; app conecta com papel `aurora_ro` (apenas `SELECT` nas 3 tabelas); `Decimal` em todo o cálculo; critério declarado | OK |
 | III. Docker Compose | Serviços `db` e `app`; `app` roda ingestão idempotente (upsert) e depois a API; `.env.example` documentado | OK |
 | IV. Simplicidade | LangGraph justificado (grafo de roteamento explícito, emenda 1.2.0); sem pgvector/frontend framework; BM25 e fallback por regras justificados em `research.md` | OK |
-| V. Testes | `tests/` com `FakeLLM`; financeiro conferido por cálculo independente sobre os CSV; `scripts/evaluate.py` separado, gera `docs/evaluation/*.jsonl`; juiz LLM complementar só nesse script (`scripts/judge.py`, FR-039), sem entrar em `app/` nem no `pytest` (testado com `FakeLLM`) | OK |
+| V. Testes | `tests/` com `FakeLLM`; financeiro conferido por cálculo independente sobre os CSV; `scripts/evaluate.py` separado, gera `docs/evaluation/*.jsonl`; juiz LLM complementar só nesse script (`scripts/judge.py`, FR-039), sem entrar em `app/` nem no `pytest` (testado com `FakeLLM`); CI roda o `pytest` sem chave e sem LLM | OK |
 | VI. DEVLOG | Cada tarefa e fase de `tasks.md` inclui a atualização de `docs/DEVLOG.md` | OK |
 | VII. Sem segredos | `.env` no `.gitignore`; só `.env.example`; log de avaliação sem chave | OK |
 | VIII. Fundamentado e com fonte | Fontes definidas por código a partir do que foi recuperado/consultado; "não encontrado" para protocolo inexistente; esclarecimento, escopo e recusa tratados antes dos agentes | OK |
@@ -82,13 +82,15 @@ app/
 ├── llm/
 │   ├── base.py          # protocolo LLMClient (classify, extract_params, answer)
 │   ├── gemini.py        # implementação Gemini
+│   ├── contratos.py     # validação das saídas do LLM (extra="forbid")
 │   └── rules.py         # roteamento/extração por regras (degradação sem chave)
 ├── agents/
 │   ├── base.py          # Resultado, formatação em reais e percentuais
 │   ├── internal.py      # RAG
 │   ├── ouvidoria.py
 │   └── financeiro.py
-├── rag/index.py         # chunking por seção + BM25 + metadados
+├── rag/index.py         # índice BM25 próprio (item por documento/FAQ) + metadados
+├── texto.py             # normalização, stopwords e radicais (RAG e regras)
 ├── queries/             # consultas parametrizadas (ouvidoria.py, financeiro.py)
 ├── db.py                # conexão (papel ro) e helpers
 ├── periodo.py           # períodos em português → intervalos de datas
@@ -97,6 +99,7 @@ app/
 frontend/                # index.html, style.css, app.js
 scripts/evaluate.py      # avaliação AV-T001–AV-T012 com LLM real
 scripts/judge.py         # juiz LLM complementar (Gemini Pro, JUDGE_MODEL); só usado pela avaliação
+.github/workflows/ci.yml # lint + pytest + docker compose a cada push, sem chave do LLM
 tests/                   # unit, integração (Postgres de teste), acceptance com FakeLLM
 docs/                    # briefing.md, DEVLOG.md, arquitetura, decisões, limitações, evaluation/
 Dockerfile, docker-compose.yml, .env.example, requirements.txt, README.md, CLAUDE.md
@@ -108,7 +111,7 @@ Dockerfile, docker-compose.yml, .env.example, requirements.txt, README.md, CLAUD
 
 1. **Fase 1 — Fatia vertical**: Docker Compose, ingestão idempotente, papel `ro`, `POST /ask` com roteamento por regras, agente de ouvidoria (protocolo exato), frontend mínimo, `trace_id` + log JSONL, `CLAUDE.md` (inclui a instrução de guardar o histórico das conversas desde o início, em `docs/conversas/`), DEVLOG (com o registro da emenda 1.2.0). Cobre AV-T004, AV-T009.
 2. **Fase 2 — Ouvidoria completa e Financeiro**: filtros e referência (AV-T005); catálogo financeiro com critério declarado (AV-T006, AV-T007, AV-T011); testes com cálculo independente.
-3. **Fase 3 — Informações internas (RAG)**: chunking, BM25, extrativo sem chave; limites e encaminhamentos (AV-T001–T003, T008, T012).
+3. **Fase 3 — Informações internas (RAG)**: indexação, BM25, extrativo sem chave; limites e encaminhamentos (AV-T001–T003, T008, T012).
 4. **Fase 4 — Gemini e segurança**: classificação com confiança, extração de parâmetros, redação do agente interno, esclarecimento/fora de escopo/recusa (AV-T010), erros do provedor, smoke test adversarial.
 5. **Fase 5 — Avaliação e documentação**: `scripts/evaluate.py` + log de avaliação versionado e log de amostra das interações (`docs/evaluation/`, sem dados sensíveis), README, arquitetura/decisões/limitações, seção de pendências (o que ficou pendente, o que foi tentado, como concluir, o que faria diferente), revisão de segredos e exportação sanitizada das conversas.
 

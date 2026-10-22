@@ -3,10 +3,11 @@
 Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 3 e 6) e detalha as escolhas técnicas do plano. As decisões 1, 4 e 5 estão em `spec.md` (Clarifications).
 
 ## 1. Estratégia de recuperação (RAG) — decisão 2
-- **Decisão**: BM25 em memória (`rank-bm25`) sobre chunks por seção/documento, com metadados `domain`, `source`, `document_version`. Índice reconstruído na subida da API a partir de `data/informacoes_internas/`.
-- **Rationale**: corpus de ~8,5 KB e 17 itens; funciona **sem chave** (exigência do modo degradado) e sem rede nos testes; zero serviço/extensão novo.
-- **Alternativas**: pgvector (exige embeddings via API, quebra o modo sem chave, extensão extra); FAISS (dependência sem ganho neste tamanho).
-- **Detalhes**: tokenização minúscula, sem acentos, stopwords PT básicas; FAQ indexado como item próprio apontando para o campo `documento`; recupera top-3 e descarta abaixo de um escore mínimo (→ "não encontrei na base"). `document_version` extraído do texto do documento, se existir; senão `n/d`.
+- **Decisão**: BM25 Okapi (k1=1,5, b=0,75) **implementado no projeto** (`app/rag/index.py`), em memória, sobre um item por documento (10) e um por pergunta do FAQ (7), com metadados `domain`, `source`, `secao`, `document_version`. Índice reconstruído na subida da API a partir de `data/informacoes_internas/`.
+- **Rationale**: corpus de ~8,5 KB e 17 itens; funciona **sem chave** (exigência do modo degradado) e sem rede nos testes; zero serviço/extensão novo. O plano previa a biblioteca `rank-bm25`; na T038 ela foi descartada porque o pacote (12 KB) exige `numpy` (~57 MB instalado, medido em 2026-10-22), peso sem ganho para 17 itens. A fórmula cabe em ~30 linhas e é coberta por `tests/test_rag.py` (desvio registrado no DEVLOG, constituição IV).
+- **Alternativas**: `rank-bm25` (descartada pelo motivo acima); pgvector (exige embeddings via API, quebra o modo sem chave, extensão extra); FAISS (dependência sem ganho neste tamanho).
+- **Quando revisar**: se a base crescer para milhares de documentos ou exigir busca semântica, reavaliar biblioteca, pgvector ou embeddings.
+- **Detalhes**: tokenização minúscula, sem acentos; termos reduzidos a radicais de 6 letras (com 5, "conte" e "contém" colidiam); stopwords PT mais palavras genéricas da base (política, documento, procedimento, processo, regra, interno, empresa, Aurora, fictício); o nome do arquivo também é indexado como termo ("06_politica_home_office" → home, office); FAQ indexado como item próprio apontando para o campo `documento`. A busca devolve até 3 itens e `ESCORE_MINIMO` = 2,0 (calibrado com AV-T001–AV-T012, compartilhado pelo agente e pelo roteamento por regras) separa "não encontrei na base". No modo extrativo, a resposta usa só o primeiro item (a faixa de valor do documento tem prioridade sobre o FAQ); os 3 itens vão para a redação por LLM na Fase 4 (T048). Itens com padrão de prompt injection não são indexados (FR-029). `document_version` extraído do texto do documento, se existir; senão `n/d`.
 
 ## 2. Framework de agentes — decisão 3
 - **Decisão**: **LangGraph** (`langgraph`) para o grafo de orquestração, por escolha do autor; as regras do desafio permitem frameworks. Nós: `guard → classify → (esclarecer | fora_de_escopo | agente_X) → finalizar`, com arestas condicionais pelo domínio/confiança. Estado tipado (`TypedDict`) carrega `trace_id`, pergunta, classificação, fontes e resposta.
@@ -23,13 +24,14 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 - **Rationale**: rastreável e verificável sem inflar a resposta.
 
 ## 4. Provedor de LLM
-- **Decisão**: Gemini via SDK `google-genai`, modelo em `GEMINI_MODEL` (padrão `gemini-3.1-flash-lite`, escolhido pelo autor; validar o id e o suporte a saída estruturada na Fase 4). Saída estruturada com `response_schema` para classificação e parâmetros. Interface `LLMClient` injetável; `FakeLLM` nos testes; `RulesLLM` quando `GEMINI_API_KEY` ausente.
+- **Decisão**: Gemini via SDK `google-genai`, modelo em `GEMINI_MODEL` (padrão `gemini-3.1-flash-lite`, escolhido pelo autor; validar o id e o suporte a saída estruturada na Fase 4). Saída estruturada com `response_json_schema` para classificação e parâmetros (ver "Validado na Fase 4"). Interface `LLMClient` injetável; `FakeLLM` nos testes; `RulesLLM` quando `GEMINI_API_KEY` ausente.
 - **Degradação sem chave**: roteamento por palavras-chave/regex (protocolo `OUV-\d{4}`, termos financeiros, termos de ouvidoria, caso contrário BM25 decide entre internas e fora de escopo por escore) e extração de parâmetros por regex; resposta de internas extrativa; a API inclui `modo: "degradado"` e a UI exibe aviso (FR-034).
-- **Falha em tempo de execução** (timeout/erro do provedor): uma tentativa com timeout de 8 s; falhou → cai para regras na classificação e devolve erro claro se a redação for indispensável; sempre registra no log.
+- **Falha em tempo de execução** (timeout/erro do provedor): uma tentativa com timeout de **10 s** (a API recusa prazo menor: "Minimum allowed deadline is 10s"; o plano previa 8 s); falhou → cai para regras na classificação e na extração de parâmetros e para a resposta extrativa na redação; a resposta sai com `modo: "degradado"` e o erro vai para o log. Depois da 1ª falha, a requisição não chama mais o provedor.
+- **Validado na Fase 4**: `gemini-3.1-flash-lite` existe; saída estruturada via `response_json_schema` (o `response_schema` do SDK recusa `additionalProperties`, gerado por `extra="forbid"`); `thinking_level="minimal"` reduz a chamada de ~7 s para ~3 s.
 
 ## 5. Classificação e confiança
 - Saída: `{dominio, confianca[0..1], dominios_candidatos[]}`. Limiar `0.6` configurável.
-- `dominio=ambigua` ou `confianca<limiar` ou ≥2 candidatos acima de `0.5` → pedido de esclarecimento (FR-003/FR-005, sem combinar agentes).
+- `dominio=ambigua` ou `confianca<limiar` → pedido de esclarecimento (FR-003/FR-005, sem combinar agentes); `candidatos` só traz vários domínios quando a pergunta é ambígua e serve para montar a pergunta de esclarecimento.
 - Pergunta fora de escopo → explicação de escopo (FR-004).
 
 ## 6. Consultas parametrizadas (financeiro e ouvidoria)

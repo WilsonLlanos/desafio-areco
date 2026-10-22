@@ -12,7 +12,7 @@ O LLM só devolve JSON nestes formatos. Qualquer desvio (campo extra, valor fora
 }
 ```
 
-Regras: limiar 0.6 (`CONFIDENCE_THRESHOLD`); `ambigua`, confiança abaixo do limiar, ou 2+ candidatos com confiança ≥ 0.5 → esclarecimento.
+Regras: limiar 0.6 (`CONFIDENCE_THRESHOLD`); `ambigua` ou confiança abaixo do limiar → esclarecimento. `candidatos` lista vários domínios só quando `dominio=ambigua` e serve para montar a pergunta de esclarecimento; não há confiança por candidato. Fora de escopo com baixa confiança continua fora de escopo.
 
 ## Parâmetros financeiros (`LLMClient.extract_params`, domínio financeiro)
 
@@ -64,6 +64,12 @@ Entrada (montada por código): pergunta + trechos recuperados, ambos delimitados
 ```
 
 Validação: `fontes_usadas ⊆ arquivos dos trechos recuperados`, senão a resposta é descartada e substituída pela versão extrativa. As fontes devolvidas ao usuário vêm do código, não do texto do modelo. Sem trecho acima do escore mínimo → "não encontrei na base" (sem chamar o modelo).
+
+Regras adicionais (Fase 4):
+- Trechos enviados: até 3, com escore ≥ metade do `ESCORE_MINIMO`, sem as linhas do documento dirigidas ao agente.
+- Número na resposta que não aparece nos trechos nem na pergunta → redação descartada, vale a extrativa (FR-008).
+- Resposta que começa com "Não encontrei" → `nao_encontrado`, sem fonte.
+- Pergunta com valor que cai em faixa de alçada → resposta extrativa; a faixa é escolhida por código, sem chamar o modelo.
 
 ## Instruções de sistema (2ª camada, não a única)
 
