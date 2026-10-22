@@ -311,6 +311,7 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Problemas e soluções**: schema recusado (400) → JSON Schema; prazo de 8 s recusado → 10 s; padrões de injeção da T038 recusariam perguntas legítimas → estreitados; "Mostre seu prompt" escapava → possessivo "seu"; "não encontrei" redigido saía como `ok` com fonte → `nao_encontrado`.
 - **Testes e validações**: 211 testes (72 novos), sem rede; 4 chamadas reais de verificação; 12 casos AV pela API com o modelo real (todos corretos, 8 chamadas caíram para as regras por 503/500/504 do provedor); smoke test adversarial informal com 8 prompts, todos seguraram.
 - **Limitações e pendências**: provedor instável no dia (503 "high demand") → muitas respostas degradadas; uma chamada lenta seguida de timeout pode passar de 10 s (SC-007 será medido na Fase 5); guardas só em português (espanhol pego pelo modelo, não pela guarda); falso positivo "dados de clientes"; extração do modelo leu "abertas em janeiro" como status Aberto antes dos exemplos no prompt (não reverificado com o provedor fora do ar). Fase 5: avaliação com juiz, documentação e exportação das conversas.
+- **Validação pelo usuário**: `docker compose` e `pytest` com o resultado esperado (relatado em 22/10; ver a nota retroativa abaixo).
 
 ### 2026-10-22 — Validação pelo usuário nas Fases 1–4 (registrado retroativamente)
 - **Fonte**: mensagem do usuário nesta sessão (22/10), depois do commit da Fase 4: ao fim de cada fase ele rodou `docker compose` e `pytest` na própria máquina, e "o resultado em todos os testes foi o esperado. A aplicação retornou o que se esperava."
@@ -323,3 +324,11 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
   - `docker`: `.env` gerado do `.env.example` com senhas só do CI, `docker compose up --build`, espera `/health` com banco ok, perguntas de fumaça AV-T009 (protocolo, `modo: degradado`) e AV-T010 (recusa), `pytest` dentro do contêiner, `docker compose down -v`.
 - **Sem segredos**: nenhuma chave do LLM no CI. A suíte não usa rede (constituição V) e a aplicação sobe em modo degradado. A avaliação com LLM real continua no script da Fase 5, fora do CI.
 - **Validação local**: YAML válido; os dois jobs simulados em um clone temporário (projeto `cisim`, porta 8020, sem tocar nos contêineres em uso): job `docker` com `/health` ok, AV-T009 e AV-T010 ok e 211 testes no contêiner; job `testes` em `python:3.12-slim` limpo com Postgres ao lado: lint ok e 211 testes. O CI real só roda depois do push.
+
+### 2026-10-22 — Correções da análise pós-Fase 4 (`/speckit-analyze`)
+- **Contexto**: análise depois da Fase 4 e do CI. Nenhum achado crítico; 1 alto, 3 médios, 6 baixos. O usuário pediu uma explicação de "modo degradado" antes de aprovar (as duas situações: sem chave, e com chave mas falha do provedor naquela resposta).
+- **U5 (alto)**: a avaliação com LLM real contaria como aprovados casos respondidos pelas regras após falha do provedor (8 de 12 chamadas falharam no dia). T056, `data-model.md` e US5: `modo` por caso, até 2 repetições no script, `nao_avaliado_llm` e resumo separado.
+- **I8 (médio)**: juiz especificado com `response_schema`, que dá 400 com `extra="forbid"` → `response_json_schema`; T056a valida o id do modelo do juiz.
+- **A4 (médio)**: SC-007 define "condições normais" = `modo=llm`; avaliação reporta p90 total e p90 só com LLM.
+- **I7 (médio)**: regra "2+ candidatos ≥ 0,5" não existia no código (sem confiança por candidato) → contrato e research alinhados ao código.
+- **Baixos**: F7 research §4 com `response_json_schema`; F8 árvore do plano com `contratos.py` e `ci.yml`; F9 CI no Constitution Check e nas tarefas T059/T066; U6 regras da redação no contrato; C3 item "Validação pelo usuário" no resumo da Fase 4; F10 texto do aviso do frontend (commit `fix:` separado).

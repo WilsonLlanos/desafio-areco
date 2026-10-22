@@ -24,14 +24,14 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 - **Rationale**: rastreável e verificável sem inflar a resposta.
 
 ## 4. Provedor de LLM
-- **Decisão**: Gemini via SDK `google-genai`, modelo em `GEMINI_MODEL` (padrão `gemini-3.1-flash-lite`, escolhido pelo autor; validar o id e o suporte a saída estruturada na Fase 4). Saída estruturada com `response_schema` para classificação e parâmetros. Interface `LLMClient` injetável; `FakeLLM` nos testes; `RulesLLM` quando `GEMINI_API_KEY` ausente.
+- **Decisão**: Gemini via SDK `google-genai`, modelo em `GEMINI_MODEL` (padrão `gemini-3.1-flash-lite`, escolhido pelo autor; validar o id e o suporte a saída estruturada na Fase 4). Saída estruturada com `response_json_schema` para classificação e parâmetros (ver "Validado na Fase 4"). Interface `LLMClient` injetável; `FakeLLM` nos testes; `RulesLLM` quando `GEMINI_API_KEY` ausente.
 - **Degradação sem chave**: roteamento por palavras-chave/regex (protocolo `OUV-\d{4}`, termos financeiros, termos de ouvidoria, caso contrário BM25 decide entre internas e fora de escopo por escore) e extração de parâmetros por regex; resposta de internas extrativa; a API inclui `modo: "degradado"` e a UI exibe aviso (FR-034).
 - **Falha em tempo de execução** (timeout/erro do provedor): uma tentativa com timeout de **10 s** (a API recusa prazo menor: "Minimum allowed deadline is 10s"; o plano previa 8 s); falhou → cai para regras na classificação e na extração de parâmetros e para a resposta extrativa na redação; a resposta sai com `modo: "degradado"` e o erro vai para o log. Depois da 1ª falha, a requisição não chama mais o provedor.
 - **Validado na Fase 4**: `gemini-3.1-flash-lite` existe; saída estruturada via `response_json_schema` (o `response_schema` do SDK recusa `additionalProperties`, gerado por `extra="forbid"`); `thinking_level="minimal"` reduz a chamada de ~7 s para ~3 s.
 
 ## 5. Classificação e confiança
 - Saída: `{dominio, confianca[0..1], dominios_candidatos[]}`. Limiar `0.6` configurável.
-- `dominio=ambigua` ou `confianca<limiar` ou ≥2 candidatos acima de `0.5` → pedido de esclarecimento (FR-003/FR-005, sem combinar agentes).
+- `dominio=ambigua` ou `confianca<limiar` → pedido de esclarecimento (FR-003/FR-005, sem combinar agentes); `candidatos` só traz vários domínios quando a pergunta é ambígua e serve para montar a pergunta de esclarecimento.
 - Pergunta fora de escopo → explicação de escopo (FR-004).
 
 ## 6. Consultas parametrizadas (financeiro e ouvidoria)

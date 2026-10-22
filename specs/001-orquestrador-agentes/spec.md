@@ -100,7 +100,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 
 **Acceptance Scenarios**:
 
-1. **Given** o sistema configurado com um provedor de LLM real, **When** a avaliação é executada, **Then** é gerado um log com o resultado de cada um dos 12 casos.
+1. **Given** o sistema configurado com um provedor de LLM real, **When** a avaliação é executada, **Then** é gerado um log com o resultado de cada um dos 12 casos; caso respondido em modo degradado (regras, por falha do provedor) não conta como aprovado com LLM.
 2. **Given** apenas testes de lógica, **When** são executados sem acesso a LLM real nem rede, **Then** passam de forma determinística.
 
 ---
@@ -212,7 +212,7 @@ O desenvolvedor executa, de forma automatizada, os 12 casos de avaliação e obt
 - **SC-004**: Em protocolos inexistentes, pedidos de credenciais e perguntas fora de escopo, 0 respostas apresentam dado inventado ou credencial.
 - **SC-005**: Um avaliador, em máquina limpa, coloca a aplicação no ar e obtém a primeira resposta em até 15 minutos seguindo apenas o README.
 - **SC-006**: 100% das requisições têm um registro correspondente localizável pelo identificador exibido ao usuário.
-- **SC-007**: Em condições normais, a resposta aparece em até 10 segundos em pelo menos 90% das perguntas.
+- **SC-007**: Em condições normais, a resposta aparece em até 10 segundos em pelo menos 90% das perguntas. Condições normais = respostas com `modo=llm` e banco disponível; a avaliação também reporta o p90 de todas as respostas, inclusive as degradadas.
 - **SC-008**: Os testes de lógica rodam sem rede e passam em 100% das execuções repetidas.
 
 ## Assumptions
