@@ -42,9 +42,9 @@ fonte e não devem ser apagadas.
 - **Fases (princípio IX)**: ao terminar uma fase, parar e aguardar aprovação explícita do usuário.
   Um commit por fase. Gate: `docker compose up` funcional, `pytest` verde, DEVLOG atualizado,
   nenhum segredo no diff.
-- **Validação pelo usuário**: o usuário roda `docker compose` e `pytest` ao fim de cada fase. O
-  resultado que ele relatar entra no resumo da fase, no item "Validação pelo usuário", separado das
-  validações feitas pela IA. Sem relato, registrar "pendente", nunca presumir sucesso.
+- **Validação pelo usuário**: nas Fases 1–4 o usuário rodou `docker compose` e `pytest` à mão; a
+  partir da Fase 5 essa validação é o CI (decisão do usuário). O resumo da fase registra o run do CI
+  do commit da fase; CI vermelho ou não executado fica como "pendente", nunca presumido verde.
 - **CI** (`.github/workflows/ci.yml`): a cada push, lint + `pytest` e `docker compose up` com
   perguntas de fumaça, sem chave do LLM. Mudança que quebre o CI não fecha a fase.
 - **Sem SQL do modelo (II)**: o LLM só extrai parâmetros validados; consultas são pré-definidas,

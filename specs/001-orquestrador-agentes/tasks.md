@@ -148,7 +148,7 @@ description: "Task list — Orquestrador de Agentes de Perguntas (Aurora)"
 - [X] T063 [P] [US4] Documentar em `docs/arquitetura.md` como consultar logs (`/traces/{id}` e `logs/interactions.jsonl`) e a política de dados nos logs
 - [X] T064 Atualizar a seção "Decisões em aberto" de `specs/001-orquestrador-agentes/spec.md` com as decisões tomadas e corrigir a numeração/estado nos documentos — **feito após `/speckit-analyze`** (seção substituída por "Decisões da seção 8 do briefing")
 - [X] T065 Exportar o histórico das conversas para `docs/conversas/` conforme a tabela de `docs/conversas/README.md` (README já criado na pré-fase; alternativa documentada se a exportação for parcial), removendo chaves, tokens, credenciais e e-mail, e revisar a sanitização; atualizar a coluna "Exportado"
-- [ ] T066 Verificação final em clone limpo: seguir só o README, medir o tempo até a primeira resposta (meta SC-005 ≤ 15 min), rodar `quickstart.md` completo, revisar o diff por segredos; confirmar o run verde do CI no GitHub para o commit final
+- [X] T066 Verificação final em clone limpo: seguir só o README, medir o tempo até a primeira resposta (meta SC-005 ≤ 15 min), rodar `quickstart.md` completo, revisar o diff por segredos; confirmar o run verde do CI no GitHub para o commit final
 - [X] T067 Gate da Fase 5: `pytest` verde, DEVLOG com resumo final, **commit** e **aguardar aprovação**; rodar `pytest` 3 vezes seguidas no contêiner, todas verdes (SC-008)
 
 ---

@@ -383,7 +383,7 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - Cópia só com os arquivos versionáveis (`git ls-files -co --exclude-standard`: sem `.env`, logs ou caches), seguindo apenas o README: `cp .env.example .env`, troca das senhas, `APP_PORT=8030` (a 8000 está ocupada nesta máquina; caso previsto na tabela de solução de problemas), `docker compose up --build`, sem chave.
 - **Tempo até a 1ª resposta (SC-005, meta ≤ 15 min)**: 10 s com o cache do Docker; **35 s com `build --no-cache`** (pip do zero; imagens base `python:3.12-slim` e `postgres:16` já baixadas). Imagem do app: 373 MB.
 - `quickstart.md` completo: chat com o aviso; AV-T004 `nao_encontrado`; `/traces/{id}` com todos os campos; ingestão 2× → 300/144/180 sem duplicar; AV-T010 recusado; entrada vazia → 422; banco parado → 502 com mensagem clara e `/health` respondendo `banco: indisponivel`, e volta ao religar; `pytest` no contêiner: 241 passados.
-- **Pendente**: confirmar o CI verde no GitHub para o commit final (depende do push).
+- CI no GitHub para o commit da fase (`c79048c`, run `39878284149`): "Lint e pytest" e "docker compose up" verdes.
 
 ### 2026-10-23 — T067 Gate da Fase 5
 - `pytest` 3 vezes seguidas no contêiner: 241 passados nas 3 (SC-008).
@@ -395,5 +395,5 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Decisões técnicas**: juiz `gemini-3.5-flash` (Pro indisponível na chave; decisão do usuário); amostra de interações via `/traces`; proibição do documento acrescentada por código quando o modelo a omite; fonte `manifestacoes.csv` em toda consulta de ouvidoria; exportador próprio com sanitização reproduzível.
 - **Problemas e soluções**: plano gratuito com 503/504 → 9 de 12 casos não avaliados com LLM na 1ª execução (o achado U5 evitou que fossem contados como aprovados) → usuário mudou para o nível 1; `gemini-2.5-pro` 404 e `gemini-3.1-pro-preview` 429 → juiz Flash; AV-T004/T009 sem o arquivo de origem e AV-T012 sem a proibição → corrigidos e reexecutados; 4ª sessão fora da tabela → incluída; `stash` desnecessário durante a T065 → conferido idêntico e removido.
 - **Testes e validações**: 241 testes (30 novos), 3× verdes no contêiner; avaliação real 12/12; cópia limpa com o quickstart completo; 35 s até a 1ª resposta sem cache do pip.
-- **Limitações e pendências**: ver `docs/limitacoes.md` (guardas só por regex, juiz da mesma família e não Pro, 12 casos, sem autenticação, sem memória de conversa). CI do commit final depende do push.
-- **Validação pelo usuário**: pendente (aguardando o relato do usuário sobre `docker compose` e `pytest` nesta fase).
+- **Limitações e pendências**: ver `docs/limitacoes.md` (guardas só por regex, juiz da mesma família e não Pro, 12 casos, sem autenticação, sem memória de conversa). CI do commit da fase verde.
+- **Validação pelo usuário**: a partir desta fase o usuário não roda mais `docker compose` e `pytest` à mão; a validação passa a ser o CI no GitHub Actions (decisão do usuário, 23/10). Run do commit da fase: `39878284149`, jobs "Lint e pytest" e "docker compose up" verdes.
