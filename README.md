@@ -113,6 +113,18 @@ specs/          spec, plano, pesquisa, contratos e tarefas (Spec Kit)
 docs/           arquitetura, decisões, limitações, DEVLOG, avaliação, histórico das conversas
 ```
 
+## Documentação da solução
+
+O pedido de "documentação explicando a arquitetura, as decisões técnicas, as limitações conhecidas
+e como testar a solução" está dividido assim:
+
+| Tema | Onde está |
+|---|---|
+| Arquitetura | `docs/arquitetura.md`: componentes, grafo LangGraph, fluxo de dados, papéis de banco, rastreabilidade e logs |
+| Decisões técnicas | `docs/decisoes.md`: decisões do briefing com alternativas descartadas, decisões do clarify, da implementação e da avaliação |
+| Limitações conhecidas | `docs/limitacoes.md`: limitações, pendências (com como concluir) e o que faria diferente |
+| Como testar | seções [Testes](#testes), [Integração contínua](#integração-contínua) e [Solução de problemas](#solução-de-problemas) deste README; roteiro ponta a ponta em `specs/001-orquestrador-agentes/quickstart.md`; resultados da avaliação em `docs/evaluation/` |
+
 ## Documentação
 
 - `docs/arquitetura.md`: componentes, grafo, fluxo de dados, papéis de banco, logs.

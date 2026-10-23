@@ -402,3 +402,7 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - Sessão 03 reexportada às 00:40 UTC com o mesmo comando; as outras três não mudaram. Agora inclui T066, T067, o push e os dois runs verdes do CI. Revisão: nenhum e-mail além do fictício `seguranca@aurora.example`, nenhuma chave ou senha.
 - O arquivo termina no pedido de reexportação; a resposta final da IA (este registro e o commit) não pode estar nele.
 - Com isso, o usuário considera o projeto sem pendências. Restam as limitações e melhorias de `docs/limitacoes.md` e o PR para a `main`.
+
+### 2026-10-23 — Seção "Documentação da solução" no README e PR para a `main`
+- O usuário perguntou qual documento atende ao pedido do recrutador ("arquitetura, decisões técnicas, limitações conhecidas e como testar"). Nenhum sozinho: está dividido em `docs/arquitetura.md`, `docs/decisoes.md`, `docs/limitacoes.md` e as seções de testes do README. Acrescentada ao README uma tabela que mapeia cada tema ao arquivo.
+- PR desta branch para a `main` aberto a pedido do usuário, para que a Fase 5 chegue à branch que o avaliador clona.
