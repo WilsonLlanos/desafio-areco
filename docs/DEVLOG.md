@@ -332,3 +332,68 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **A4 (médio)**: SC-007 define "condições normais" = `modo=llm`; avaliação reporta p90 total e p90 só com LLM.
 - **I7 (médio)**: regra "2+ candidatos ≥ 0,5" não existia no código (sem confiança por candidato) → contrato e research alinhados ao código.
 - **Baixos**: F7 research §4 com `response_json_schema`; F8 árvore do plano com `contratos.py` e `ci.yml`; F9 CI no Constitution Check e nas tarefas T059/T066; U6 regras da redação no contrato; C3 item "Validação pelo usuário" no resumo da Fase 4; F10 texto do aviso do frontend (commit `fix:` separado).
+
+## Fase 5 — Avaliação e documentação
+
+### 2026-10-23 — T056 Script de avaliação
+- `scripts/evaluate.py`: roda os 12 casos contra a API (`--url`), checagens determinísticas por caso (domínio; recusa em AV-T010; cada arquivo de `fonte_esperada` nas fontes; conteúdo-chave do critério sem acentos/maiúsculas; AV-T006/T007/T011 com o valor do oráculo `tests/oracle.py`, calculado direto dos CSV).
+- Achado U5 aplicado: `modo` por caso, até 2 repetições quando `degradado`, `nao_avaliado_llm` se continuar; resumo separa aprovados com LLM, reprovados, não avaliados e "aprovados em modo degradado"; p90 total e só `modo=llm`.
+- Grava `docs/evaluation/avaliacao-<data-hora>.jsonl` (casos + linha de resumo) e `interacoes-amostra.jsonl`, montada pelo próprio `/traces/{id}` (sem ler arquivos do contêiner). Roda com `docker compose run` e `docs/evaluation` montado do host.
+
+### 2026-10-23 — T056a Juiz
+- `scripts/judge.py`: rubrica do contrato, pergunta/resposta/referência delimitadas com o mesmo `_dados` da aplicação, `response_json_schema`, temperatura 0, saída validada por Pydantic; qualquer falha → `"erro"`, sem reprovar o caso. Referência por caso: documento esperado, valor do oráculo, registro ou enum.
+- **Validação do modelo**: `gemini-2.5-pro` aparece na listagem mas devolve 404 ("no longer available to new users"); `gemini-3.1-pro-preview` devolveu 429 (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, nova tentativa em ~7 h). Sondei os Flash: `gemini-2.5-flash`, `gemini-3-flash-preview` e `gemini-3.5-flash` responderam. **Decisão do usuário**: `gemini-3.5-flash` (minha recomendação). Desvio registrado em research §12, `spec.md` (FR-039), `contracts/judge.md`, `plan.md` e `.env.example`. `JUDGE_MODEL` passado com `-e` na execução, sem alterar o `.env` do usuário.
+
+### 2026-10-23 — T056b Testes do juiz e da avaliação
+- `tests/test_judge.py` (26 testes): delimitação (marca injetada `</resposta>` neutralizada), referência certa por domínio, saída válida/inválida (5 formas), falha do provedor → `erro`, divergência nos dois sentidos, sem juiz e caso não avaliado com LLM → sem divergência; checagens determinísticas (valor do oráculo, as duas fontes de AV-T010, domínio errado, acentos) e p90. Gerador falso injetado no lugar do `FakeLLM`, cuja interface (`classify`/`answer`) não serve ao juiz.
+
+### 2026-10-23 — T057 Avaliação com LLM real
+- **1ª execução** (`avaliacao-2026-10-22-2350.jsonl`, plano gratuito): 3 aprovados com LLM, 9 não avaliados com LLM após 3 tentativas (16 erros 503 e 13 erros 504 do provedor), 0 reprovados; 7 dos 9 passariam nas checagens em modo degradado. Juiz com erro em todos (404 do `gemini-2.5-pro`). Sem o achado U5, este relatório teria saído como "12/12 com LLM".
+- O usuário mudou a chave para o **nível 1** (pago). **2ª execução** (`avaliacao-2026-10-23-0009.jsonl`): todos em `modo=llm` na 1ª tentativa, p90 2,5 s; 9 aprovados, 3 reprovados (ver T058); juiz sem erros, 2 divergências.
+- Logs revisados: sem chaves, tokens ou e-mail; a amostra de interações tem só as perguntas sintéticas do JSON de avaliação.
+
+### 2026-10-23 — T058 Falhas da avaliação e reexecução
+- **AV-T004 e AV-T009** (determinístico reprovou, juiz aprovou → divergentes): a busca por protocolo não citava o arquivo `manifestacoes.csv` (só a consulta ou o protocolo), ao contrário da contagem. Correção: busca (encontrada ou não) e listagem citam `manifestacoes.csv`. Teste de rastreio que fixava as fontes antigas atualizado.
+- **AV-T012** (determinístico e juiz reprovaram): a redação do LLM omitiu "Não inclua senhas, tokens… no chamado", que a resposta extrativa trazia como "Atenção:". Correção por código, não por prompt: se a 1ª linha de proibição do documento principal não está coberta pela resposta, o código a acrescenta como "Atenção:" (mesma regra da extrativa, agora em `_alertas`).
+- **3ª execução** (`avaliacao-2026-10-23-0012.jsonl`): **12/12 aprovados com LLM**, 0 não avaliados, p90 2,5 s (meta 10 s), juiz `gemini-3.5-flash` sem erros e 0 divergências.
+- Pendência da Fase 4 resolvida: com o provedor estável, "Quantas manifestações abertas em janeiro de 2026?" → 24 (data de abertura) e "com status Aberto" → 39, iguais ao oráculo.
+- **Testes**: 241 passados no contêiner (26 do juiz e 4 novos aqui: proibição mantida/não repetida, fonte do protocolo encontrado/inexistente).
+
+### 2026-10-23 — T059 README final
+- Pré-requisitos, subida, tabela de variáveis, exemplos, testes e avaliação (comando com `docker compose run` e `docs/evaluation` montado), seções "Integração contínua" (com badge) e "Segurança" (camadas da mais forte para a mais fraca, limitações das regex, "a implementar"), solução de problemas e estrutura.
+- Correção: o rascunho citava `AGENTS.md`, que não existe; ficou só `CLAUDE.md`.
+
+### 2026-10-23 — T060/T063 Arquitetura e logs
+- `docs/arquitetura.md`: visão geral, tabela "o que o modelo faz × o que o código garante", grafo gerado por `draw_mermaid()` (copiado da saída real no contêiner), fluxo de dados, papéis de banco (conferidos nos `GRANT` de `app/ingestion.py`), rastreabilidade, comandos para consultar logs e política de dados nos logs.
+
+### 2026-10-23 — T061 Decisões
+- `docs/decisoes.md`: as 6 decisões do briefing §8 com motivo e alternativas descartadas (inclui a implementação própria sem framework, recomendada no briefing e descartada pelo autor), decisões do clarify e da implementação, avaliação e juiz (Pro planejado → `gemini-3.5-flash`).
+
+### 2026-10-23 — T062 Limitações e pendências
+- `docs/limitacoes.md`: segurança por regex, logs com a pergunta como digitada, recuperação, provedor, avaliação e viés do juiz; tabela de pendências com como concluir; "o que faria diferente" (DEVLOG em lote nas Fases 1–2, testar o provedor real antes, separar resposta correta de resposta com LLM).
+
+### 2026-10-23 — T065 Exportação das conversas
+- `scripts/exportar_conversas.py` converte o JSONL de cada sessão em Markdown e sanitiza (e-mails exceto `@aurora.example`/`noreply@anthropic.com`, chaves `AIza…`, valores de `*PASSWORD=`, diretório pessoal, marcas internas de texto colado). Mantém mensagens do usuário, texto da IA, uma linha por chamada de ferramenta, perguntas de decisão com respostas e o plano aprovado; omite saídas de ferramentas, blocos de sistema, corpo das skills e o resumo de compactação.
+- **Achado**: havia uma 4ª sessão fora da tabela (`21ee7b2d…`, 22/10 22:04 UTC): um "continue" em sessão paralela tentou iniciar a Fase 5; o usuário recusou o `docker compose up` e interrompeu, sem alterações. Incluída como `sessao-04`.
+- **Revisão**: busca por e-mails (só sobrou `seguranca@aurora.example`, fictício), `AIza`, senhas de desenvolvimento e o e-mail do usuário: nada. O e-mail do desafio colado na sessão 03 não tem assinatura nem contatos. Fica o nome de usuário do sistema no caminho `~/.claude/projects/-home-<usuário>-…` (já presente no `CLAUDE.md`); não é segredo.
+- 1ª versão gerava um cabeçalho por chamada de ferramenta (arquivo repetitivo): mensagens seguidas do mesmo autor agrupadas.
+- A sessão 03 foi exportada em andamento; o que vem depois (T066, T067, aprovação) fica só neste DEVLOG.
+
+### 2026-10-23 — T066 Verificação em cópia limpa
+- Cópia só com os arquivos versionáveis (`git ls-files -co --exclude-standard`: sem `.env`, logs ou caches), seguindo apenas o README: `cp .env.example .env`, troca das senhas, `APP_PORT=8030` (a 8000 está ocupada nesta máquina; caso previsto na tabela de solução de problemas), `docker compose up --build`, sem chave.
+- **Tempo até a 1ª resposta (SC-005, meta ≤ 15 min)**: 10 s com o cache do Docker; **35 s com `build --no-cache`** (pip do zero; imagens base `python:3.12-slim` e `postgres:16` já baixadas). Imagem do app: 373 MB.
+- `quickstart.md` completo: chat com o aviso; AV-T004 `nao_encontrado`; `/traces/{id}` com todos os campos; ingestão 2× → 300/144/180 sem duplicar; AV-T010 recusado; entrada vazia → 422; banco parado → 502 com mensagem clara e `/health` respondendo `banco: indisponivel`, e volta ao religar; `pytest` no contêiner: 241 passados.
+- **Pendente**: confirmar o CI verde no GitHub para o commit final (depende do push).
+
+### 2026-10-23 — T067 Gate da Fase 5
+- `pytest` 3 vezes seguidas no contêiner: 241 passados nas 3 (SC-008).
+- Diff completo da fase revisado: nenhuma chave, senha de desenvolvimento ou e-mail do usuário.
+
+### Resumo da Fase 5
+- **Objetivo**: evidência objetiva com LLM real e entrega documentada.
+- **O que funciona**: `scripts/evaluate.py` (checagens determinísticas, oráculo, `modo` por caso, repetição dos degradados, p90 total e com LLM) e `scripts/judge.py` (juiz complementar); 3 execuções versionadas em `docs/evaluation/`, a última com **12/12 aprovados com LLM, p90 2,5 s, 0 divergências**; README final, `docs/arquitetura.md`, `docs/decisoes.md`, `docs/limitacoes.md`; histórico das 4 sessões exportado e sanitizado.
+- **Decisões técnicas**: juiz `gemini-3.5-flash` (Pro indisponível na chave; decisão do usuário); amostra de interações via `/traces`; proibição do documento acrescentada por código quando o modelo a omite; fonte `manifestacoes.csv` em toda consulta de ouvidoria; exportador próprio com sanitização reproduzível.
+- **Problemas e soluções**: plano gratuito com 503/504 → 9 de 12 casos não avaliados com LLM na 1ª execução (o achado U5 evitou que fossem contados como aprovados) → usuário mudou para o nível 1; `gemini-2.5-pro` 404 e `gemini-3.1-pro-preview` 429 → juiz Flash; AV-T004/T009 sem o arquivo de origem e AV-T012 sem a proibição → corrigidos e reexecutados; 4ª sessão fora da tabela → incluída; `stash` desnecessário durante a T065 → conferido idêntico e removido.
+- **Testes e validações**: 241 testes (30 novos), 3× verdes no contêiner; avaliação real 12/12; cópia limpa com o quickstart completo; 35 s até a 1ª resposta sem cache do pip.
+- **Limitações e pendências**: ver `docs/limitacoes.md` (guardas só por regex, juiz da mesma família e não Pro, 12 casos, sem autenticação, sem memória de conversa). CI do commit final depende do push.
+- **Validação pelo usuário**: pendente (aguardando o relato do usuário sobre `docker compose` e `pytest` nesta fase).

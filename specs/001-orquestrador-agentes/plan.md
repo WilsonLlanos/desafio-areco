@@ -98,7 +98,7 @@ app/
 └── tracing.py           # contextvar trace_id, logger JSON, gravação JSONL
 frontend/                # index.html, style.css, app.js
 scripts/evaluate.py      # avaliação AV-T001–AV-T012 com LLM real
-scripts/judge.py         # juiz LLM complementar (Gemini Pro, JUDGE_MODEL); só usado pela avaliação
+scripts/judge.py         # juiz LLM complementar (JUDGE_MODEL: gemini-3.5-flash); só usado pela avaliação
 .github/workflows/ci.yml # lint + pytest + docker compose a cada push, sem chave do LLM
 tests/                   # unit, integração (Postgres de teste), acceptance com FakeLLM
 docs/                    # briefing.md, DEVLOG.md, arquitetura, decisões, limitações, evaluation/

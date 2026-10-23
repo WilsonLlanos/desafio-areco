@@ -155,3 +155,20 @@ def test_nao_encontrei_do_modelo_sai_sem_fonte(indice):
                              "fontes_usadas": ["01_politica_ferias.md"]})
     r = internal.responder(indice, "Como solicito férias?", fake)
     assert r.status == "nao_encontrado" and r.fontes == [] and "Fonte" not in r.resposta
+
+
+def test_redacao_mantem_a_proibicao_do_documento(indice):
+    """AV-T012: o modelo omitiu "Não inclua senhas…"; o código acrescenta a linha de alerta."""
+    fake = FakeLLM(resposta={"resposta": "Reporte imediatamente para seguranca@aurora.example.",
+                             "fontes_usadas": ["07_fluxo_de_incidentes.md"]})
+    r = internal.responder(indice, "O que fazer se houver incidente de segurança?", fake)
+    assert r.dados["redigida"] and "Atenção: Não inclua senhas, tokens" in r.resposta
+    assert r.resposta.endswith("(Fonte: 07_fluxo_de_incidentes.md.)")
+
+
+def test_proibicao_ja_coberta_nao_e_repetida(indice):
+    fake = FakeLLM(resposta={"resposta": "Reporte imediatamente para seguranca@aurora.example. Não inclua senhas, "
+                                         "tokens, dados pessoais desnecessários ou informações sigilosas no chamado.",
+                             "fontes_usadas": ["07_fluxo_de_incidentes.md"]})
+    r = internal.responder(indice, "O que fazer se houver incidente de segurança?", fake)
+    assert "Atenção" not in r.resposta

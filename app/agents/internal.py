@@ -68,12 +68,16 @@ def _faixa_de_valor(linhas: list[str], valor: Decimal) -> list[str]:
     return achadas
 
 
+def _alertas(linhas: list[str], excluir: set[int] = frozenset()) -> list[int]:
+    """Índice da 1ª linha de proibição ("Não…"/"Nunca…") do documento, se não estiver em `excluir`."""
+    return [i for i, l in enumerate(linhas) if re.match(r"(não|nunca)\b", l, re.I) and i not in excluir][:1]
+
+
 def _linhas_relevantes(linhas: list[str], pergunta: str) -> list[str]:
     consulta = set(termos(pergunta))
     pontuadas = [(len(consulta & set(termos(l))), i) for i, l in enumerate(linhas)]
     escolhidas = sorted(i for p, i in sorted(pontuadas, reverse=True)[:2] if p > 0)
-    alertas = [i for i, l in enumerate(linhas) if re.match(r"(não|nunca)\b", l, re.I) and i not in escolhidas][:1]
-    return [linhas[i] for i in escolhidas] + [f"Atenção: {linhas[i]}" for i in alertas]
+    return [linhas[i] for i in escolhidas] + [f"Atenção: {linhas[i]}" for i in _alertas(linhas, set(escolhidas))]
 
 
 def _fonte(item: Item, doc: Item | None) -> Fonte:
@@ -139,7 +143,14 @@ def redigir(llm, pergunta: str, trechos: list[dict], indice: Indice) -> Resultad
     usadas = list(dict.fromkeys(r.fontes_usadas))
     por_fonte = {t["source"]: t["item"] for t in reversed(trechos)}  # o de maior escore prevalece
     fontes = [_fonte(por_fonte[s], indice.documento(s)) for s in usadas]
-    return Resultado(f"{r.resposta.strip()} (Fonte: {', '.join(usadas)}.)", "ok", fontes,
+    texto = r.resposta.strip()
+    # a proibição do documento principal não pode sumir na paráfrase (AV-T012): o código a acrescenta
+    doc = indice.documento(trechos[0]["source"])
+    linhas = linhas_do_documento(doc.texto) if doc else []
+    for i in _alertas(linhas):
+        if not set(termos(linhas[i])) <= set(termos(texto)):
+            texto += f" Atenção: {linhas[i]}"
+    return Resultado(f"{texto} (Fonte: {', '.join(usadas)}.)", "ok", fontes,
                      {"item": por_fonte[usadas[0]].id, "redigida": True})
 
 
