@@ -2119,3 +2119,104 @@ O e-mail colado não tem marca de fechamento no export. Procuro o fim do trecho 
 - `Bash`: Print tail of pasted challenge email in export
 
 - `Bash`: Neutralize paste markers, re-export, preview
+
+Funciona, mas cada chamada de ferramenta abre um cabeçalho "Claude" novo, o que deixa o arquivo longo e repetitivo. Agrupo as mensagens seguidas do mesmo autor sob um único cabeçalho.
+
+- `Bash`: Group consecutive messages and re-export
+
+- `Bash`: Update conversations README table and notes
+
+Registro a T065 no DEVLOG e passo à T066: uma verificação em clone limpo, seguindo só o README e o quickstart.
+
+- `Bash`: DEVLOG T065 and check working tree
+
+Esse `git stash` não era necessário. Confiro que a árvore de trabalho ficou idêntica ao stash e removo a entrada que sobrou.
+
+- `Bash`: Verify working tree matches stash
+
+- `Bash`: Drop leftover stash entry
+
+- `Bash`: Build clean copy of committable files
+
+- `Bash`: Follow README in clean copy and time first answer
+
+- `Bash`: Run quickstart scenarios in clean copy
+
+Todos os cenários do quickstart passaram no clone limpo. Agora o build sem cache. A imagem base `python:3.12-slim` e a do Postgres continuam em cache local; o `pip install` roda do zero.
+
+- `Bash`: Time no-cache build to first answer, then tear down
+
+- `Bash`: Run pytest 3x and scan staged diff for secrets
+
+O `grep-exit=0` ali é do `head`, não do `grep`. Refaço a busca sozinha, para ter o resultado real.
+
+- `Bash`: Recount secret matches in staged diff
+
+- `Bash`: Write T066/T067 notes and phase summary
+
+A única tarefa aberta é a T066, que espera o CI do commit final. Faço o commit da fase.
+
+- `Bash`: Commit phase 5
+
+A Fase 5 está pronta e commitada (`c79048c`, sem push). Na avaliação final com o Gemini real, os 12 casos foram aprovados, com p90 de latência de 2,5 s (a meta é 10 s) e o juiz concordando em todos. Falta só confirmar o CI no GitHub para este commit (T066).
+
+**Como chegamos aos 12/12.** Fiz três execuções e versionei todas em `docs/evaluation/`:
+
+| Execução | Resultado | O que aconteceu |
+|---|---|---|
+| 1ª, plano gratuito | 3 aprovados com LLM, 9 não avaliados com LLM | O provedor falhou 29 vezes (503 e 504). Sem a separação por `modo` da análise anterior, este relatório teria saído como "12/12 com LLM". |
+| 2ª, depois de você mudar para o nível 1 | 9 aprovados, 3 reprovados | Todas as respostas vieram do modelo, sem falhas do provedor. As reprovações eram defeitos reais (abaixo). |
+| 3ª, após as correções | **12/12 aprovados com LLM** | Juiz sem erros e sem divergências. |
+
+As três reprovações da 2ª execução e o que corrigi:
+- **AV-T004 e AV-T009:** a busca por protocolo não citava o arquivo de origem `manifestacoes.csv`. O juiz aprovou as respostas, o que gerou divergência com a checagem automática. Agora toda consulta de ouvidoria cita o arquivo.
+- **AV-T012:** ao redigir, o modelo omitiu "Não inclua senhas, tokens… no chamado"; o juiz também reprovou. Agora, se o modelo deixar de fora a proibição do documento, o código a acrescenta como "Atenção:".
+
+Com o provedor estável, conferi também a pendência da Fase 4: "abertas em janeiro de 2026" deu 24 e "status Aberto" deu 39, iguais ao cálculo direto sobre os CSV.
+
+**Juiz.** O Pro não funcionou nesta chave: o `gemini-2.5-pro` devolveu 404 e o `gemini-3.1-pro-preview` devolveu 429 por cota. Usei o `gemini-3.5-flash`, como você escolheu, e registrei o desvio no research, na spec, no contrato e em `docs/limitacoes.md`. Com a chave no nível 1, o Pro pode funcionar agora, mas não testei. A pendência está documentada.
+
+**Entregáveis**
+- **Documentação:** README final (com o badge e uma seção sobre o CI), `docs/arquitetura.md` (com o grafo gerado pelo LangGraph), `docs/decisoes.md` e `docs/limitacoes.md`.
+- **Conversas:** as 4 sessões estão exportadas e sanitizadas em `docs/conversas/`, geradas por `scripts/exportar_conversas.py`.
+  - A sessão `21ee7b2d…`, que não estava na tabela, foi incluída: foi a tentativa interrompida de começar a Fase 5.
+  - A sessão atual foi exportada em andamento, então o que vier depois da exportação fica só no DEVLOG.
+- **Verificação em cópia limpa, seguindo só o README:** todo o quickstart passou. A primeira resposta saiu em 35 s com o `pip install` rodando do zero; as imagens base já estavam baixadas.
+- **Gate:** o `pytest` passou 3 vezes seguidas no contêiner (241 testes) e o diff não tem segredos.
+
+Um tropeço meu durante a exportação: fiz um `git stash` sem necessidade. Conferi que a árvore de trabalho ficou idêntica e removi o stash; isso está registrado no DEVLOG.
+
+**Para fechar:**
+1. **Push:** depois do `git push`, confirmo o CI verde e marco a T066. Se preferir, faço o push.
+2. **Seu relato:** como você roda o `docker compose` e o `pytest` ao fim de cada fase, me diga o resultado. O item "Validação pelo usuário" do resumo da Fase 5 está como "pendente" até lá.
+
+### Usuário — 2026-10-23 00:27
+
+Não rodo mais docker e pytest, pois subi o arquivo yml no github actions. Pode dar o push.
+
+### Claude — 2026-10-23 00:28
+
+Faço o push e acompanho o CI.
+
+- `Bash`: Push branch and list CI runs
+
+- `Bash`: Wait for CI run and show job results
+
+- `Bash`: Record CI result, commit, push, watch CI
+
+Fiz o push e o CI ficou verde. As 72 tarefas estão concluídas, e todas as fases e notas estão no DEVLOG.
+
+- **Commit da Fase 5 (`c79048c`):** os dois jobs do CI passaram, "Lint e pytest" e "docker compose up" (run 39878284149). Com isso marquei a T066.
+- **Sua decisão de validar pelo CI:** registrei no resumo da Fase 5 do DEVLOG e atualizei a regra do `CLAUDE.md`.
+  - Nas Fases 1 a 4 você validou à mão.
+  - A partir da Fase 5, a validação é o CI.
+  - CI vermelho ou não executado fica como "pendente", nunca presumido verde.
+- **Commit desse registro (`5d42ecb`):** fiz o push e o CI também passou.
+
+A branch `001-orquestrador-agentes` está sincronizada com o `origin`. Falta só abrir o PR para a `main`, como você fez no #4; posso abrir se quiser.
+
+Para a entrega, vale lembrar que a exportação da sessão 03 parou às 00:18 UTC. O que veio depois (verificação em cópia limpa, gate, push e CI) está só no DEVLOG. Se quiser essas mensagens também no histórico de conversas, posso rodar o exportador de novo no fim, logo antes de entregar.
+
+### Usuário — 2026-10-23 00:38
+
+Pode rodar o exportador para atualizar o historico de conversas. Com isso, acho que não há mais nada pendente.

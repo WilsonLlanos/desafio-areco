@@ -397,3 +397,8 @@ Registro contínuo do desenvolvimento com IA (constitution, princípio VI). Form
 - **Testes e validações**: 241 testes (30 novos), 3× verdes no contêiner; avaliação real 12/12; cópia limpa com o quickstart completo; 35 s até a 1ª resposta sem cache do pip.
 - **Limitações e pendências**: ver `docs/limitacoes.md` (guardas só por regex, juiz da mesma família e não Pro, 12 casos, sem autenticação, sem memória de conversa). CI do commit da fase verde.
 - **Validação pelo usuário**: a partir desta fase o usuário não roda mais `docker compose` e `pytest` à mão; a validação passa a ser o CI no GitHub Actions (decisão do usuário, 23/10). Run do commit da fase: `39878284149`, jobs "Lint e pytest" e "docker compose up" verdes.
+
+### 2026-10-23 — Reexportação do histórico (pedido do usuário)
+- Sessão 03 reexportada às 00:40 UTC com o mesmo comando; as outras três não mudaram. Agora inclui T066, T067, o push e os dois runs verdes do CI. Revisão: nenhum e-mail além do fictício `seguranca@aurora.example`, nenhuma chave ou senha.
+- O arquivo termina no pedido de reexportação; a resposta final da IA (este registro e o commit) não pode estar nele.
+- Com isso, o usuário considera o projeto sem pendências. Restam as limitações e melhorias de `docs/limitacoes.md` e o PR para a `main`.
