@@ -55,7 +55,8 @@ def _buscar_protocolo(conn, params: dict) -> Resultado:
     if linha is None:
         return Resultado(f"O protocolo {protocolo} não foi encontrado na base de manifestações.",
                          "nao_encontrado",
-                         [Fonte(tipo="consulta", ref="ouvidoria.buscar_protocolo", detalhe=f"protocolo={protocolo}")])
+                         [Fonte(tipo="consulta", ref="ouvidoria.buscar_protocolo", detalhe=f"protocolo={protocolo}"),
+                          Fonte(tipo="arquivo", ref="manifestacoes.csv")])
     resposta = (
         f"Protocolo {linha['protocolo']}: status \"{linha['status']}\". "
         f"Categoria: {linha['categoria']}; assunto: {linha['assunto']}; prioridade: {linha['prioridade']}; "
@@ -63,7 +64,8 @@ def _buscar_protocolo(conn, params: dict) -> Resultado:
         f"Aberto em {_fmt(linha['data_abertura'])}; data de resposta: {_fmt(linha['data_resposta'])}. "
         f"{AVISO_PRAZO}"
     )
-    return Resultado(resposta, "ok", [Fonte(tipo="protocolo", ref=linha["protocolo"], detalhe="manifestacoes.csv")])
+    return Resultado(resposta, "ok", [Fonte(tipo="protocolo", ref=linha["protocolo"], detalhe="manifestacoes.csv"),
+                                      Fonte(tipo="arquivo", ref="manifestacoes.csv")])
 
 
 def _referencia(params: dict, ref: dict) -> Resultado:
@@ -96,7 +98,7 @@ def _listar(conn, params: dict, ref: dict) -> Resultado:
     de, ate, periodo = _datas(params)
     total = q.contar(conn, filtros, de, ate)
     desc = _descricao(filtros, periodo)
-    fontes = [Fonte(tipo="consulta", ref="ouvidoria.listar", detalhe=desc)]
+    fontes = [Fonte(tipo="consulta", ref="ouvidoria.listar", detalhe=desc), Fonte(tipo="arquivo", ref="manifestacoes.csv")]
     if total == 0:
         return Resultado(f"Nenhuma manifestação encontrada ({desc}).", "nao_encontrado", fontes, {"total": 0})
     linhas = q.listar(conn, filtros, de, ate)

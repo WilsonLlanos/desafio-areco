@@ -1,6 +1,6 @@
 # Contrato do juiz de avaliação (só no script de avaliação)
 
-O juiz é um modelo Gemini Pro (`JUDGE_MODEL`) usado **apenas** por `scripts/evaluate.py`, por meio de
+O juiz é um modelo Gemini mais capaz que o avaliado (`JUDGE_MODEL`; planejado Gemini Pro, usado `gemini-3.5-flash`, ver research §12) usado **apenas** por `scripts/evaluate.py`, por meio de
 `scripts/judge.py`. Nenhum módulo de `app/` o importa. Ele é **complementar**: aprovado/reprovado
 continua decidido pelas checagens determinísticas (domínio, fonte, valores contra o oráculo).
 

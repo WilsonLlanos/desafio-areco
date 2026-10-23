@@ -63,6 +63,7 @@ Resolve as decisões da seção 8 do briefing ainda abertas após o clarify (2, 
 
 ## 12. Juiz de avaliação (FR-039)
 - **Decisão**: juiz LLM **complementar**, só em `scripts/evaluate.py` (via `scripts/judge.py`), com modelo Gemini Pro definido em `JUDGE_MODEL`. Aprovado/reprovado continua determinístico; o juiz registra nota, justificativa e `divergente` (`contracts/judge.md`).
+- **Desvio na Fase 5 (decisão do usuário)**: `gemini-2.5-pro` devolveu 404 ("no longer available to new users") e `gemini-3.1-pro-preview` devolveu 429 (cota diária do plano gratuito). O usuário escolheu `gemini-3.5-flash`: mais capaz que o `flash-lite` avaliado, mas não Pro. O viés de mesma família fica maior; a mitigação continua (referência por caso, rubrica, temperatura 0, decisão determinística). Juiz Pro ou de outra família: melhoria futura.
 - **Rationale (escolha do usuário)**: mesma chave e mesmo SDK `google-genai` já previstos, sem dependência nova; o juiz só troca de modelo, não de provedor.
 - **Alternativa descartada**: juiz de outra família (sugestão da IA: Claude), que reduz o viés de autoavaliação mas exige outra chave e outro SDK. Fica como **melhoria futura**.
 - **Limitação e mitigação**: viés favorável de mesma família. Mitigado com referência explícita por caso (documento esperado, valor do oráculo, registro de ouvidoria), rubrica fixa, temperatura 0 e decisão final determinística. Será documentado em `docs/limitacoes.md` (T062).

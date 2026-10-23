@@ -35,3 +35,9 @@ def test_injecao_sql_no_protocolo_nao_chega_ao_banco(client):
     d = perguntar(client, "protocolo OUV-0002'; DROP TABLE manifestacoes_ouvidoria;--")
     assert d["status"] == "ok"  # só o protocolo válido é extraído; o resto é ignorado
     assert perguntar(client, "status do protocolo OUV-0001")["status"] == "ok"
+
+
+@pytest.mark.parametrize("protocolo", ["OUV-0002", "OUV-9999"])
+def test_busca_por_protocolo_cita_o_arquivo_de_origem(client, protocolo):
+    d = client.post("/ask", json={"pergunta": f"Qual o status do protocolo {protocolo}?"}).json()
+    assert "manifestacoes.csv" in [f["ref"] for f in d["fontes"]]

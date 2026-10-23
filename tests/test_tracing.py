@@ -35,7 +35,7 @@ def test_api_expoe_trace_id_e_grava_log(client, db_settings):
     assert r.headers["X-Trace-Id"] == tid
     reg = client.get(f"/traces/{tid}").json()
     assert reg["pergunta"] and reg["dominio_previsto"] == "ouvidoria" and reg["agente"] == "ouvidoria"
-    assert reg["fontes"] == ["OUV-0002"] and reg["status"] == "ok" and reg["latencia_ms"] >= 0
+    assert reg["fontes"] == ["OUV-0002", "manifestacoes.csv"] and reg["status"] == "ok" and reg["latencia_ms"] >= 0
 
 
 def test_falha_registra_erro_com_mesmo_trace_id(client_sem_banco, settings):
